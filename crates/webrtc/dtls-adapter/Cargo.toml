@@ -1,0 +1,19 @@
+[package]
+name = "fluvora-dtls-adapter"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[features]
+default = []
+openssl-backend = ["dep:openssl"]
+openssl-vendored = ["openssl-backend", "openssl/vendored"]
+
+[dependencies]
+fluvora-srtp = { path = "../srtp" }
+openssl = { version = "0.10", optional = true }
+sha2 = "0.10"
+
+[lints]
+workspace = true

@@ -1,0 +1,19 @@
+[package]
+name = "fluvora-status-service"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+axum = "0.8"
+fluvora-control-store = { path = "../control-store" }
+fluvora-domain = { path = "../../foundation/domain" }
+fluvora-observability = { path = "../../foundation/observability" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal"] }
+url = "2"
+
+[lints]
+workspace = true

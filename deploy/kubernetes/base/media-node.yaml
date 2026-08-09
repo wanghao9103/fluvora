@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluvora-media-node
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 1}
+  selector:
+    matchLabels: {app: fluvora-media-node}
+  template:
+    metadata:
+      labels: {app: fluvora-media-node}
+      annotations: {prometheus.io/scrape: "true", prometheus.io/port: "8092"}
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: media-node
+          image: ghcr.io/fluvora/fluvora
+          command: [fluvora-media-node]
+          envFrom:
+            - configMapRef: {name: fluvora-config}
+            - secretRef: {name: fluvora-secrets}
+          env:
+            - name: NODE_NAME
+              valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
+            - name: FLUVORA_NODE_ID
+              value: "media-node-$(NODE_NAME)"
+            - name: POD_IP
+              valueFrom: {fieldRef: {fieldPath: status.podIP}}
+            - name: HOST_IP
+              valueFrom: {fieldRef: {fieldPath: status.hostIP}}
+            - name: FLUVORA_CONTROL_ADVERTISE_URL
+              value: "http://$(POD_IP):8092"
+            - name: FLUVORA_MEDIA_ADVERTISE_CANDIDATE
+              value: "1 1 UDP 2130706431 $(HOST_IP) 50000 typ host"
+          ports:
+            - {name: control, containerPort: 8092}
+            - {name: rtc, containerPort: 50000, protocol: UDP}
+          volumeMounts:
+            - {name: dtls, mountPath: /certs, readOnly: true}
+          readinessProbe: {httpGet: {path: /health/ready, port: control}, periodSeconds: 5}
+          livenessProbe: {httpGet: {path: /health/live, port: control}, periodSeconds: 10}
+          startupProbe: {httpGet: {path: /health/live, port: control}, periodSeconds: 2, failureThreshold: 30}
+          resources:
+            requests: {cpu: "1", memory: 512Mi}
+            limits: {cpu: "4", memory: 4Gi}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      volumes:
+        - name: dtls
+          secret: {secretName: fluvora-dtls}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluvora-media-node
+spec:
+  selector: {app: fluvora-media-node}
+  ports:
+    - {name: control, port: 8092, targetPort: control}

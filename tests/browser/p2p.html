@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fluvora P2P browser interoperability probe</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+
+      body {
+        max-width: 70rem;
+        margin: 3rem auto;
+        padding: 0 1rem;
+      }
+
+      #status {
+        font-size: 1.25rem;
+      }
+
+      pre {
+        padding: 1rem;
+        overflow: auto;
+        border: 1px solid currentColor;
+        border-radius: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Fluvora P2P browser interoperability probe</h1>
+    <p id="status" data-testid="status">RUNNING</p>
+    <pre id="details" data-testid="details">Starting…</pre>
+    <script type="module" src="./p2p.mjs?v=2"></script>
+  </body>
+</html>

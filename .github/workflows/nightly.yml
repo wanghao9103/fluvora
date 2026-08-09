@@ -1,0 +1,79 @@
+name: Nightly reliability
+
+on:
+  schedule:
+    - cron: "17 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-control-soak:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:18.4-alpine3.23
+        env:
+          POSTGRES_DB: fluvora_soak
+          POSTGRES_USER: fluvora
+          POSTGRES_PASSWORD: fluvora-soak-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fluvora -d fluvora_soak"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      FLUVORA_DATABASE_URL: postgresql://fluvora:fluvora-soak-password@127.0.0.1:5432/fluvora_soak
+      FLUVORA_TOKEN_TTL: "3600"
+      FLUVORA_SOAK_SECONDS: "1800"
+      FLUVORA_SOAK_CONCURRENCY: "32"
+      FLUVORA_SOAK_MAXIMUM_P95_MS: "1000"
+      FLUVORA_SKIP_BROWSER: "true"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: 1.96.0
+      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Build native services
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config
+          cargo build -p fluvora-api-server -p fluvora-admin
+          cargo build -p fluvora-media-node --features openssl-backend
+      - name: Thirty-minute transactional soak
+        run: bash scripts/run-browser-interop.sh
+
+  protocol-fuzz-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # nightly input
+        with:
+          toolchain: nightly-2026-07-27
+      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - run: cargo install cargo-fuzz --locked
+      - name: Bounded protocol fuzzing
+        run: |
+          cargo fuzz run stun_message -- -max_total_time=300
+          cargo fuzz run rtp_packet -- -max_total_time=300
+          cargo fuzz run data_channel_packet -- -max_total_time=300
+
+  capacity-profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: 1.96.0
+      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - run: cargo run --release --locked -p fluvora-perf-lab -- --assert

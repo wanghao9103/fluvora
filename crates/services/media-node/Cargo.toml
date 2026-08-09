@@ -1,0 +1,36 @@
+[package]
+name = "fluvora-media-node"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[features]
+default = []
+openssl-backend = ["fluvora-dtls-adapter/openssl-backend"]
+openssl-vendored = ["openssl-backend", "fluvora-dtls-adapter/openssl-vendored"]
+
+[dependencies]
+axum = "0.8"
+fluvora-dtls-adapter = { path = "../../webrtc/dtls-adapter" }
+fluvora-congestion-control = { path = "../../webrtc/congestion-control" }
+fluvora-data-channel = { path = "../../webrtc/data-channel" }
+fluvora-domain = { path = "../../foundation/domain" }
+fluvora-ice-lite = { path = "../../webrtc/ice-lite" }
+fluvora-media-codec = { path = "../../webrtc/media-codec" }
+fluvora-observability = { path = "../../foundation/observability" }
+fluvora-protocol = { path = "../../foundation/protocol" }
+fluvora-rtc-datagram = { path = "../../webrtc/rtc-datagram" }
+fluvora-rtc-session = { path = "../../webrtc/rtc-session" }
+fluvora-rtcp = { path = "../../webrtc/rtcp" }
+fluvora-rtp = { path = "../../webrtc/rtp" }
+fluvora-sfu-core = { path = "../../webrtc/sfu-core" }
+fluvora-stun = { path = "../../webrtc/stun" }
+fluvora-status-client = { path = "../../control-plane/status-client" }
+fluvora-status-service = { path = "../../control-plane/status-service" }
+serde = { version = "1", features = ["derive"] }
+getrandom = "0.3"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+
+[lints]
+workspace = true

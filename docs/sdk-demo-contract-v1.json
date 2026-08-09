@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "dataChannel": {
+    "label": "fluvora.room.v1",
+    "protocol": "fluvora.v1"
+  },
+  "scenarios": [
+    "client.configure",
+    "room.create",
+    "room.join",
+    "room.chat",
+    "room.custom",
+    "ice.fetch",
+    "sfu.negotiate",
+    "p2p.signal",
+    "session.cleanup"
+  ],
+  "demos": {
+    "web": {
+      "path": "examples/web/app.mjs",
+      "markers": [
+        "new FluvoraClient",
+        "createRoom(",
+        ".join(",
+        "sendChat(",
+        "sendCustomData(",
+        "getIceConfiguration(",
+        "connectSfu(",
+        "createP2pSession(",
+        ".close()"
+      ]
+    },
+    "rust": {
+      "path": "sdk/rust/examples/room_client.rs",
+      "markers": [
+        "Client::new",
+        "create_room(",
+        ".join(",
+        "send_chat(",
+        "send_custom_data(",
+        "get_ice_configuration(",
+        "connect_sfu(",
+        "post_signal(",
+        ".leave("
+      ]
+    },
+    "c": {
+      "path": "sdk/c-abi/examples/room_client.c",
+      "markers": [
+        "fluvora_client_new",
+        "fluvora_create_room",
+        "fluvora_join_room",
+        "fluvora_send_chat",
+        "fluvora_send_custom_data",
+        "fluvora_get_ice_configuration",
+        "fluvora_exchange_offer",
+        "fluvora_post_signal",
+        "fluvora_client_free"
+      ]
+    },
+    "android": {
+      "path": "sdk/android/demo/src/main/java/com/fluvora/demo/MainActivity.kt",
+      "markers": [
+        "FluvoraClient(",
+        "createRoom(",
+        ".join(",
+        "sendChat(",
+        "sendCustomData(",
+        "getIceConfiguration(",
+        "connectSfu(",
+        "CallbackWebRtcPeer(",
+        ".leave("
+      ]
+    },
+    "ios": {
+      "paths": [
+        "sdk/ios/Sources/FluvoraDemo/FluvoraDemo.swift",
+        "sdk/ios/Examples/FluvoraDemoApp/FluvoraDemoApp/DemoModel.swift"
+      ],
+      "markers": [
+        "FluvoraClient(",
+        "createRoom(",
+        "join(",
+        "sendChat(",
+        "sendCustomData(",
+        "getIceConfiguration(",
+        "connectSFU(",
+        "CallbackWebRTCPeer(",
+        "leave("
+      ]
+    }
+  }
+}

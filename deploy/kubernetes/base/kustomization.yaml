@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: fluvora
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - storage.yaml
+  - status.yaml
+  - event-dispatcher.yaml
+  - availability.yaml
+  - network-policy.yaml
+  - media-node.yaml
+  - worker.yaml
+  - gateway.yaml
+  - turn.yaml
+  - api.yaml
+images:
+  - name: ghcr.io/fluvora/fluvora
+    newTag: 0.1.0

@@ -1,0 +1,15 @@
+[package]
+name = "fluvora-sfu-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+fluvora-media-codec = { path = "../media-codec" }
+fluvora-rtc-datagram = { path = "../rtc-datagram" }
+fluvora-rtcp = { path = "../rtcp" }
+fluvora-rtp = { path = "../rtp" }
+
+[lints]
+workspace = true

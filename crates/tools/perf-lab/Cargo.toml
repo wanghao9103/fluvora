@@ -1,0 +1,15 @@
+[package]
+name = "fluvora-perf-lab"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+fluvora-media-codec = { path = "../../webrtc/media-codec" }
+fluvora-rtp = { path = "../../webrtc/rtp" }
+fluvora-sfu-core = { path = "../../webrtc/sfu-core" }
+serde_json = "1"
+
+[lints]
+workspace = true

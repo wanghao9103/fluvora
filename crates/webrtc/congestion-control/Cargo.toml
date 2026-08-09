@@ -1,0 +1,13 @@
+[package]
+name = "fluvora-congestion-control"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+fluvora-rtcp = { path = "../rtcp" }
+fluvora-sfu-core = { path = "../sfu-core" }
+
+[lints]
+workspace = true

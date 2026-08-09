@@ -1,0 +1,136 @@
+groups:
+  - name: fluvora-availability
+    rules:
+      - alert: FluvoraServiceDown
+        expr: up{job=~"fluvora-.+"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is unreachable"
+          description: "Prometheus has failed to scrape {{ $labels.instance }} for one minute."
+
+      - alert: FluvoraMediaNodeUnavailable
+        expr: fluvora_status_service_instances{service="media_node",state="available"} < 1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "No available Fluvora media node"
+          description: "New WebRTC sessions cannot be scheduled."
+
+      - alert: FluvoraStatusHeartbeatLoss
+        expr: fluvora_status_nodes - fluvora_status_healthy_nodes > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "One or more Fluvora nodes are unhealthy"
+          description: "Inspect the status API and per-service scrape targets."
+
+      - alert: FluvoraEventDispatcherNotReady
+        expr: fluvora_event_dispatcher_ready == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Transactional outbox delivery is unavailable"
+          description: "Inspect PostgreSQL, NATS JetStream and dispatcher lease ownership."
+
+      - alert: FluvoraEventDeliveryRetries
+        expr: increase(fluvora_event_dispatcher_retried_total[10m]) > 5
+        labels:
+          severity: warning
+        annotations:
+          summary: "Transactional outbox retries are accumulating"
+          description: "Inspect NATS acknowledgements and PostgreSQL outbox retry details."
+
+  - name: fluvora-media-quality
+    rules:
+      - alert: FluvoraPacketDropRateHigh
+        expr: rate(fluvora_packets_dropped_total[5m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Media packet drops are elevated"
+          description: "The media node is dropping more than 50 packets/s."
+
+      - alert: FluvoraMediaProcessingLatencyHigh
+        expr: histogram_quantile(0.99, sum by (le) (rate(fluvora_packet_processing_micros_bucket{job="fluvora-media-node"}[5m]))) > 5000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Media packet processing p99 exceeds 5 ms"
+          description: "Inspect CPU saturation, room fan-out and packet-drop metrics."
+
+      - alert: FluvoraControlLatencyHigh
+        expr: histogram_quantile(0.95, sum by (le) (rate(fluvora_control_processing_micros_bucket{job="fluvora-api"}[5m]))) > 500000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Control API processing p95 exceeds 500 ms"
+          description: "Inspect PostgreSQL latency, downstream control services and API saturation."
+
+      - alert: FluvoraAuthenticationFailuresHigh
+        expr: rate(fluvora_authentication_failures_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RTC authentication failures are elevated"
+          description: "Inspect ICE, DTLS and SRTP negotiation failures."
+
+      - alert: FluvoraDataChannelDeliveryFailure
+        expr: increase(fluvora_data_channel_delivery_failures_total[10m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "A DataChannel association exhausted retransmissions"
+          description: "The SCTP association was closed after reliable DATA could not be acknowledged."
+
+      - alert: FluvoraDataChannelPartialAbandonmentHigh
+        expr: increase(fluvora_data_channel_messages_abandoned_total[10m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DataChannel partial-reliability abandonment is elevated"
+          description: "Check client network quality and whether maxRetransmits/maxPacketLifeTime are too strict."
+
+      - alert: FluvoraTurnAllocationPressure
+        expr: fluvora_turn_active_allocations / fluvora_turn_allocation_limit > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TURN relay port capacity exceeds 80 percent"
+          description: "Increase the relay UDP range and allocation quota together."
+
+      - alert: FluvoraTurnRelayRateLimited
+        expr: rate(fluvora_turn_rate_limited_datagrams_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TURN allocations are being bandwidth limited"
+          description: "Inspect abusive clients or raise the per-allocation relay byte limit."
+
+      - alert: FluvoraWorkerFailureGrowth
+        expr: increase(fluvora_worker_jobs{state="failed"}[15m]) > 5
+        labels:
+          severity: warning
+        annotations:
+          summary: "Transcode failures are accumulating"
+          description: "Inspect FFmpeg inputs, resource pressure and worker logs."
+
+      - alert: FluvoraWorkerQueuePressure
+        expr: fluvora_worker_jobs{state="queued"} / fluvora_worker_concurrency_limit > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Transcode queue exceeds twice the worker concurrency"
+          description: "Add worker capacity or reduce tenant admission quotas."

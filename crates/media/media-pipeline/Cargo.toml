@@ -1,0 +1,12 @@
+[package]
+name = "fluvora-media-pipeline"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+
+[lints]
+workspace = true

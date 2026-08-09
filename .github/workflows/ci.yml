@@ -1,0 +1,224 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  supply-chain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: EmbarkStudios/cargo-deny-action@b66acf5e9fe20f8aba065be86778a8a4c846f902 # v2
+        with:
+          command: check
+
+  rust:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: 1.96.0
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - name: System dependencies
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg libssl-dev pkg-config
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Architecture boundaries
+        shell: pwsh
+        run: ./scripts/check-architecture.ps1
+      - name: Lint default workspace
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test default workspace
+        run: cargo test --workspace --locked
+      - name: Build Rust and C SDK demos
+        run: |
+          cargo build -p fluvora-sdk --example room_client --locked
+          cargo build -p fluvora-c-abi --locked
+          cmake -S sdk/c-abi/examples -B target/c-demo \
+            -DFLUVORA_LIBRARY_DIR="${GITHUB_WORKSPACE}/target/debug"
+          cmake --build target/c-demo
+      - name: Compile production DTLS and DataChannel path
+        run: cargo clippy -p fluvora-media-node --features openssl-backend --all-targets -- -D warnings
+      - name: Test DTLS adapter
+        run: cargo test -p fluvora-dtls-adapter --features openssl-backend --locked
+      - name: Real TURN UDP, TCP and TLS relay smoke
+        shell: pwsh
+        run: |
+          cargo build -p fluvora-turn-server --bins --locked
+          ./scripts/smoke-turn.ps1 -EvidenceDirectory artifacts/turn-smoke
+      - name: Real FFmpeg VOD and live HLS smoke
+        shell: pwsh
+        run: |
+          cargo build -p fluvora-media-worker --locked
+          ./scripts/smoke-hls-pipelines.ps1
+      - name: Compile fuzz harnesses
+        run: cargo check --manifest-path fuzz/Cargo.toml --bins --locked
+
+  postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18.4-alpine3.23
+        env:
+          POSTGRES_DB: fluvora_test
+          POSTGRES_USER: fluvora
+          POSTGRES_PASSWORD: fluvora-test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fluvora -d fluvora_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      FLUVORA_TEST_DATABASE_URL: postgresql://fluvora:fluvora-test-password@127.0.0.1:5432/fluvora_test
+      FLUVORA_TEST_NATS_URL: nats://127.0.0.1:4222
+      FLUVORA_TEST_NATS_TOKEN: fluvora-ci-nats-token-32-bytes
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: 1.96.0
+      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - name: Start JetStream
+        run: |
+          docker run --detach --name fluvora-nats --publish 4222:4222 --publish 8222:8222 \
+            nats:2.14.3-alpine --jetstream --http_port=8222 \
+            --auth="${FLUVORA_TEST_NATS_TOKEN}"
+          for attempt in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:8222/healthz && break
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8222/healthz
+      - run: cargo test -p fluvora-control-store --test postgres --locked
+      - run: cargo test -p fluvora-event-dispatcher --test jetstream --locked
+
+  web-sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: sdk/web
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sdk/web/package-lock.json
+      - run: npm ci
+      - run: node ../../scripts/check-sdk-contract.mjs
+      - run: node ../../scripts/check-sdk-demos.mjs
+      - run: npm run check
+      - run: npm test
+
+  browser-interop:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: 1.96.0
+      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            sdk/web/package-lock.json
+            tests/browser/package-lock.json
+      - name: Build native WebRTC services
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iproute2 libssl-dev pkg-config
+          cargo build -p fluvora-api-server -p fluvora-admin
+          cargo build -p fluvora-media-node --features openssl-backend
+      - working-directory: sdk/web
+        run: npm ci && npm run build
+      - working-directory: tests/browser
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium firefox webkit
+      - name: Chromium, Firefox and WebKit interoperability
+        run: bash scripts/run-browser-interop.sh
+      - name: Chromium interoperability under delay, jitter, loss and reordering
+        env:
+          FLUVORA_NETEM: "true"
+          FLUVORA_SKIP_LOAD: "true"
+          FLUVORA_BROWSER_PROJECT: chromium
+        run: bash scripts/run-browser-interop.sh
+
+  media-performance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: 1.96.0
+      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - name: SFU hot-path performance gate
+        run: cargo run --release --locked -p fluvora-perf-lab -- --quick --assert
+
+  android-sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+        with:
+          gradle-version: "9.4.1"
+      - working-directory: sdk/android
+        run: >
+          gradle --no-daemon
+          :fluvora:testDebugUnitTest
+          :fluvora:assembleRelease
+          :demo:assembleDebug
+
+  swift-sdk:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - run: swift test --package-path sdk/ios
+      - run: swift build --package-path sdk/ios --product fluvora-swift-demo
+      - name: Build iOS Simulator demo app
+        run: >
+          xcodebuild
+          -project sdk/ios/Examples/FluvoraDemoApp/FluvoraDemoApp.xcodeproj
+          -scheme FluvoraDemoApp
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
+
+  container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
+      - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: .
+          file: deploy/docker/Dockerfile
+          push: false
+          tags: fluvora:ci
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

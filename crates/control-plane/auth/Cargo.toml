@@ -1,0 +1,15 @@
+[package]
+name = "fluvora-auth"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+base64 = "0.22"
+fluvora-bytes-codec = { path = "../../foundation/bytes-codec" }
+hmac = "0.12"
+sha2 = "0.10"
+
+[lints]
+workspace = true

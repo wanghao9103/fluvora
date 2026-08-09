@@ -1,0 +1,26 @@
+[package]
+name = "fluvora-media-gateway"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+axum = "0.8"
+fluvora-control-store = { path = "../../control-plane/control-store" }
+fluvora-domain = { path = "../../foundation/domain" }
+fluvora-media-pipeline = { path = "../../media/media-pipeline" }
+fluvora-media-store = { path = "../../media/media-store" }
+fluvora-status-client = { path = "../../control-plane/status-client" }
+fluvora-status-service = { path = "../../control-plane/status-service" }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tower-http = { version = "0.6", features = ["cors"] }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tempfile = "3"

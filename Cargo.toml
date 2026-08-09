@@ -1,0 +1,27 @@
+[workspace]
+resolver = "3"
+exclude = ["fuzz"]
+members = [
+    "crates/foundation/*",
+    "crates/webrtc/*",
+    "crates/media/*",
+    "crates/control-plane/*",
+    "crates/services/*",
+    "crates/tools/*",
+    "sdk/rust",
+    "sdk/c-abi",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Fluvora Contributors"]
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"

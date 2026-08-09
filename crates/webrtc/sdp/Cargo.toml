@@ -1,0 +1,10 @@
+[package]
+name = "fluvora-sdp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+

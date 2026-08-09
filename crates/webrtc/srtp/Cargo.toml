@@ -1,0 +1,19 @@
+[package]
+name = "fluvora-srtp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+aes = "0.8"
+ctr = "0.9"
+fluvora-rtcp = { path = "../rtcp" }
+fluvora-rtp = { path = "../rtp" }
+hmac = "0.12"
+sha1 = "0.10"
+subtle = "2.6"
+zeroize = { version = "1.8", features = ["derive"] }
+
+[lints]
+workspace = true

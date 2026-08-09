@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluvora-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: fluvora-api}
+  template:
+    metadata:
+      labels: {app: fluvora-api}
+      annotations: {prometheus.io/scrape: "true", prometheus.io/port: "8080"}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {app: fluvora-api}
+      containers:
+        - name: api
+          image: ghcr.io/fluvora/fluvora
+          command: [fluvora-api-server]
+          envFrom:
+            - configMapRef: {name: fluvora-config}
+            - secretRef: {name: fluvora-secrets}
+          env:
+            - name: FLUVORA_NODE_ID
+              valueFrom: {fieldRef: {fieldPath: metadata.name}}
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe: {httpGet: {path: /health/ready, port: http}, periodSeconds: 5}
+          livenessProbe: {httpGet: {path: /health/live, port: http}, periodSeconds: 10}
+          startupProbe: {httpGet: {path: /health/live, port: http}, periodSeconds: 2, failureThreshold: 30}
+          resources:
+            requests: {cpu: 250m, memory: 256Mi}
+            limits: {cpu: "2", memory: 1Gi}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluvora-api
+spec:
+  selector: {app: fluvora-api}
+  ports:
+    - {name: http, port: 8080, targetPort: http}

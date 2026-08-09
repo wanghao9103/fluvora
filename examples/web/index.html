@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fluvora Web SDK Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">Fluvora · Web SDK</p>
+          <h1>实时媒体接入台</h1>
+          <p class="lede">SFU、P2P、房间数据、弱网自适应与 HLS 回退的可运行示例。</p>
+        </div>
+        <div id="state" class="pill" data-state="idle">未连接</div>
+      </header>
+
+      <section class="panel configuration">
+        <h2>连接参数</h2>
+        <label>API 地址 <input id="base-url" value="http://127.0.0.1:8080" /></label>
+        <label>短期 Token <input id="token" type="password" autocomplete="off" /></label>
+        <label>模式
+          <select id="mode">
+            <option value="sfu">SFU</option>
+            <option value="p2p">P2P</option>
+            <option value="live">直播</option>
+            <option value="vod">点播</option>
+          </select>
+        </label>
+        <label>房间 ID <input id="room-id" placeholder="创建后自动填充，或粘贴已有 ID" /></label>
+        <label>参与者 ID <input id="participant-id" placeholder="自动读取 Token sub" /></label>
+        <div class="actions">
+          <button id="create-room">创建房间</button>
+          <button id="join-room" class="secondary">加入房间</button>
+          <button id="leave-room" class="danger">离开并清理</button>
+        </div>
+      </section>
+
+      <section class="media-grid">
+        <article class="panel">
+          <h2>本地媒体</h2>
+          <video id="local-video" autoplay muted playsinline></video>
+          <div class="actions">
+            <button id="start-media">打开媒体</button>
+            <button id="connect-sfu">连接 SFU</button>
+          </div>
+        </article>
+        <article class="panel">
+          <h2>远端媒体</h2>
+          <video id="remote-video" autoplay playsinline controls></video>
+          <div class="metric-row">
+            <span>网络质量</span><strong id="quality">—</strong>
+            <span>RTT</span><strong id="rtt">—</strong>
+            <span>丢包</span><strong id="loss">—</strong>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>P2P 信令</h2>
+        <div class="inline-form">
+          <input id="remote-participant-id" placeholder="对端参与者 ID" />
+          <button id="start-p2p">启动 P2P</button>
+          <button id="send-offer" class="secondary">向对端发 Offer</button>
+        </div>
+      </section>
+
+      <section class="two-column">
+        <article class="panel">
+          <h2>房间数据</h2>
+          <div class="inline-form">
+            <input id="chat-text" placeholder="聊天内容" />
+            <button id="send-chat">发送聊天</button>
+          </div>
+          <div class="inline-form">
+            <input id="custom-json" value='{"action":"wave"}' aria-label="自定义 JSON" />
+            <button id="send-custom" class="secondary">发送自定义数据</button>
+          </div>
+        </article>
+        <article class="panel">
+          <h2>直播 / 点播</h2>
+          <div class="inline-form">
+            <input id="manifest-url" placeholder="HLS manifest URL（也用于弱网回退）" />
+            <button id="play-manifest" class="secondary">播放</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="log-heading">
+          <h2>事件与诊断</h2>
+          <button id="clear-log" class="ghost">清空</button>
+        </div>
+        <pre id="log" aria-live="polite"></pre>
+      </section>
+    </main>
+    <script type="module" src="./app.mjs"></script>
+  </body>
+</html>

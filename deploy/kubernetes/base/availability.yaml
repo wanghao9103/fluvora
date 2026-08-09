@@ -1,0 +1,133 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fluvora-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: fluvora-api}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fluvora-worker
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: fluvora-worker}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fluvora-event-dispatcher
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: fluvora-event-dispatcher}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fluvora-status
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: fluvora-status}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fluvora-media-node
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels: {app: fluvora-media-node}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: fluvora-turn
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels: {app: fluvora-turn}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fluvora-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fluvora-api
+  minReplicas: 2
+  maxReplicas: 8
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fluvora-worker
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fluvora-worker
+  minReplicas: 2
+  maxReplicas: 10
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fluvora-event-dispatcher
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fluvora-event-dispatcher
+  minReplicas: 2
+  maxReplicas: 6
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fluvora-status
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fluvora-status
+  minReplicas: 2
+  maxReplicas: 4
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}

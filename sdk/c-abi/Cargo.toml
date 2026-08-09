@@ -1,0 +1,19 @@
+[package]
+name = "fluvora-c-abi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+description = "Stable blocking C ABI over the Fluvora Rust SDK"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+fluvora-sdk = { path = "../rust" }
+serde = "1"
+serde_json = "1"
+tokio = { version = "1", features = ["net", "rt", "time"] }
+
+[lints]
+workspace = true

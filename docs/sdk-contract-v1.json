@@ -1,0 +1,391 @@
+{
+  "version": 1,
+  "protocol": {
+    "dataChannelLabel": "fluvora.room.v1",
+    "dataChannelProtocol": "fluvora.v1",
+    "envelopeMagic": "FLUV",
+    "envelopeVersion": 1,
+    "maximumEnvelopeBytes": 16384,
+    "signalKinds": [
+      "offer",
+      "answer",
+      "ice-candidate",
+      "ice-restart",
+      "renegotiate",
+      "bye"
+    ]
+  },
+  "payloadLimits": {
+    "jsonRequestBytes": 1048576,
+    "chatBytes": 4096,
+    "customNamespaceBytes": 64,
+    "customPayloadBytes": 61440,
+    "signalPayloadBytes": 65536,
+    "signalPageMessages": 128,
+    "signalBacklogMessagesPerRoom": 128,
+    "signalBroadcastMessagesPerRoom": 128,
+    "signalCacheBytesPerRoom": 8388608,
+    "sdpBytes": 262144,
+    "mediaUploadBytes": 8388608
+  },
+  "persistenceLimits": {
+    "roomSnapshotBytes": 33554432,
+    "roomEventBytes": 1048576,
+    "commandHistoryEntries": 4096,
+    "giftTransactionHistoryEntries": 4096,
+    "deliveredOutboxRetentionHours": 168,
+    "deliveredOutboxCleanupBatch": 10000
+  },
+  "operations": [
+    {
+      "id": "createRoom",
+      "path": "/v1/rooms",
+      "markers": {
+        "web": "async createRoom(",
+        "rust": "pub async fn create_room(",
+        "android": "public suspend fun createRoom(",
+        "ios": "public func createRoom("
+      }
+    },
+    {
+      "id": "getRoom",
+      "path": "/v1/rooms/{room_id}",
+      "markers": {
+        "web": "async getRoom(",
+        "rust": "pub async fn get_room(",
+        "android": "public suspend fun getRoom(",
+        "ios": "public func getRoom("
+      }
+    },
+    {
+      "id": "join",
+      "path": "/v1/rooms/{room_id}/join",
+      "markers": {
+        "web": "join(roomId:",
+        "rust": "pub async fn join(",
+        "android": "public suspend fun join(",
+        "ios": "public func join("
+      }
+    },
+    {
+      "id": "leave",
+      "path": "/v1/rooms/{room_id}/leave",
+      "markers": {
+        "web": "leave(roomId:",
+        "rust": "pub async fn leave(",
+        "android": "public suspend fun leave(",
+        "ios": "public func leave("
+      }
+    },
+    {
+      "id": "end",
+      "path": "/v1/rooms/{room_id}/end",
+      "markers": {
+        "web": "end(roomId:",
+        "rust": "pub async fn end(",
+        "android": "public suspend fun end(",
+        "ios": "public func end("
+      }
+    },
+    {
+      "id": "startPublishing",
+      "path": "/v1/rooms/{room_id}/publish/start",
+      "markers": {
+        "web": "startPublishing(roomId:",
+        "rust": "pub async fn start_publishing(",
+        "android": "public suspend fun startPublishing(",
+        "ios": "public func startPublishing("
+      }
+    },
+    {
+      "id": "stopPublishing",
+      "path": "/v1/rooms/{room_id}/publish/stop",
+      "markers": {
+        "web": "stopPublishing(roomId:",
+        "rust": "pub async fn stop_publishing(",
+        "android": "public suspend fun stopPublishing(",
+        "ios": "public func stopPublishing("
+      }
+    },
+    {
+      "id": "setRole",
+      "path": "/v1/rooms/{room_id}/roles",
+      "markers": {
+        "web": "setRole(roomId:",
+        "rust": "pub async fn set_role(",
+        "android": "public suspend fun setRole(",
+        "ios": "public func setRole("
+      }
+    },
+    {
+      "id": "sendChat",
+      "path": "/v1/rooms/{room_id}/chat",
+      "markers": {
+        "web": "sendChat(roomId:",
+        "rust": "pub async fn send_chat(",
+        "android": "public suspend fun sendChat(",
+        "ios": "public func sendChat("
+      }
+    },
+    {
+      "id": "sendCustomData",
+      "path": "/v1/rooms/{room_id}/custom",
+      "markers": {
+        "web": "sendCustomData(",
+        "rust": "pub async fn send_custom_data(",
+        "android": "public suspend fun sendCustomData(",
+        "ios": "public func sendCustomData("
+      }
+    },
+    {
+      "id": "recordVerifiedGift",
+      "path": "/v1/rooms/{room_id}/gifts",
+      "markers": {
+        "web": "recordVerifiedGift(",
+        "rust": "pub async fn record_verified_gift(",
+        "android": "public suspend fun recordVerifiedGift(",
+        "ios": "public func recordVerifiedGift("
+      }
+    },
+    {
+      "id": "connectSfu",
+      "path": "/v1/rooms/{room_id}/webrtc/offer",
+      "markers": {
+        "web": "async connectSfu(",
+        "rust": "pub async fn connect_sfu(",
+        "android": "public suspend fun connectSfu(",
+        "ios": "public func connectSFU("
+      }
+    },
+    {
+      "id": "postSignal",
+      "path": "/v1/rooms/{room_id}/signals",
+      "markers": {
+        "web": "async postSignal(",
+        "rust": "pub async fn post_signal(",
+        "android": "public suspend fun postSignal(",
+        "ios": "public func postSignal("
+      }
+    },
+    {
+      "id": "pollSignals",
+      "path": "/v1/rooms/{room_id}/signals",
+      "markers": {
+        "web": "async pollSignals(",
+        "rust": "pub async fn poll_signals(",
+        "android": "public suspend fun pollSignals(",
+        "ios": "public func pollSignals("
+      }
+    },
+    {
+      "id": "getIceConfiguration",
+      "path": "/v1/rooms/{room_id}/ice-servers",
+      "markers": {
+        "web": "async getIceConfiguration(",
+        "rust": "pub async fn get_ice_configuration(",
+        "android": "public suspend fun getIceConfiguration(",
+        "ios": "public func getIceConfiguration("
+      }
+    },
+    {
+      "id": "publishTrack",
+      "path": "/v1/rooms/{room_id}/tracks",
+      "markers": {
+        "web": "async publishTrack(",
+        "rust": "pub async fn publish_track(",
+        "android": "public suspend fun publishTrack(",
+        "ios": "public func publishTrack("
+      }
+    },
+    {
+      "id": "unpublishTrack",
+      "path": "/v1/rooms/{room_id}/tracks/{track_id}",
+      "markers": {
+        "web": "async unpublishTrack(",
+        "rust": "pub async fn unpublish_track(",
+        "android": "public suspend fun unpublishTrack(",
+        "ios": "public func unpublishTrack("
+      }
+    },
+    {
+      "id": "subscribeTrack",
+      "path": "/v1/rooms/{room_id}/subscriptions",
+      "markers": {
+        "web": "async subscribeTrack(",
+        "rust": "pub async fn subscribe_track(",
+        "android": "public suspend fun subscribeTrack(",
+        "ios": "public func subscribeTrack("
+      }
+    },
+    {
+      "id": "unsubscribeTrack",
+      "path": "/v1/rooms/{room_id}/subscriptions/{subscription_id}",
+      "markers": {
+        "web": "async unsubscribeTrack(",
+        "rust": "pub async fn unsubscribe_track(",
+        "android": "public suspend fun unsubscribeTrack(",
+        "ios": "public func unsubscribeTrack("
+      }
+    },
+    {
+      "id": "setSubscriptionLayer",
+      "path": "/v1/rooms/{room_id}/subscriptions/{subscription_id}/layer",
+      "markers": {
+        "web": "async setSubscriptionLayer(",
+        "rust": "pub async fn set_subscription_layer(",
+        "android": "public suspend fun setSubscriptionLayer(",
+        "ios": "public func setSubscriptionLayer("
+      }
+    },
+    {
+      "id": "createAsset",
+      "path": "/v1/assets",
+      "markers": {
+        "web": "async createAsset(",
+        "rust": "pub async fn create_asset(",
+        "android": "public suspend fun createAsset(",
+        "ios": "public func createAsset("
+      }
+    },
+    {
+      "id": "getAsset",
+      "path": "/v1/assets/{asset_id}",
+      "markers": {
+        "web": "async getAsset(",
+        "rust": "pub async fn get_asset(",
+        "android": "public suspend fun getAsset(",
+        "ios": "public func getAsset("
+      }
+    },
+    {
+      "id": "deleteAsset",
+      "path": "/v1/assets/{asset_id}",
+      "markers": {
+        "web": "async deleteAsset(",
+        "rust": "pub async fn delete_asset(",
+        "android": "public suspend fun deleteAsset(",
+        "ios": "public func deleteAsset("
+      }
+    },
+    {
+      "id": "uploadAssetChunk",
+      "path": "/v1/assets/{asset_id}/source",
+      "markers": {
+        "web": "async uploadAssetChunk(",
+        "rust": "pub async fn upload_asset_chunk(",
+        "android": "public suspend fun uploadAssetChunk(",
+        "ios": "public func uploadAssetChunk("
+      }
+    },
+    {
+      "id": "completeAsset",
+      "path": "/v1/assets/{asset_id}/complete",
+      "markers": {
+        "web": "async completeAsset(",
+        "rust": "pub async fn complete_asset(",
+        "android": "public suspend fun completeAsset(",
+        "ios": "public func completeAsset("
+      }
+    },
+    {
+      "id": "createLiveOutput",
+      "path": "/v1/live/{stream_id}",
+      "markers": {
+        "web": "async createLiveOutput(",
+        "rust": "pub async fn create_live_output(",
+        "android": "public suspend fun createLiveOutput(",
+        "ios": "public func createLiveOutput("
+      }
+    },
+    {
+      "id": "createLiveAbrOutputFromTracks",
+      "path": "/v1/live/{stream_id}",
+      "markers": {
+        "web": "async createLiveAbrOutputFromTracks(",
+        "rust": "pub async fn create_live_abr_output_from_tracks(",
+        "android": "public suspend fun createLiveAbrOutputFromTracks(",
+        "ios": "public func createLiveAbrOutputFromTracks("
+      }
+    },
+    {
+      "id": "getLiveOutput",
+      "path": "/v1/live/{stream_id}",
+      "markers": {
+        "web": "async getLiveOutput(",
+        "rust": "pub async fn get_live_output(",
+        "android": "public suspend fun getLiveOutput(",
+        "ios": "public func getLiveOutput("
+      }
+    },
+    {
+      "id": "deleteLiveOutput",
+      "path": "/v1/live/{stream_id}",
+      "markers": {
+        "web": "async deleteLiveOutput(",
+        "rust": "pub async fn delete_live_output(",
+        "android": "public suspend fun deleteLiveOutput(",
+        "ios": "public func deleteLiveOutput("
+      }
+    },
+    {
+      "id": "uploadLiveInit",
+      "path": "/v1/live/{stream_id}/init",
+      "markers": {
+        "web": "async uploadLiveInit(",
+        "rust": "pub async fn upload_live_init(",
+        "android": "public suspend fun uploadLiveInit(",
+        "ios": "public func uploadLiveInit("
+      }
+    },
+    {
+      "id": "uploadLiveSegment",
+      "path": "/v1/live/{stream_id}/segments/{sequence}",
+      "markers": {
+        "web": "async uploadLiveSegment(",
+        "rust": "pub async fn upload_live_segment(",
+        "android": "public suspend fun uploadLiveSegment(",
+        "ios": "public func uploadLiveSegment("
+      }
+    },
+    {
+      "id": "finishLiveOutput",
+      "path": "/v1/live/{stream_id}/finish",
+      "markers": {
+        "web": "async finishLiveOutput(",
+        "rust": "pub async fn finish_live_output(",
+        "android": "public suspend fun finishLiveOutput(",
+        "ios": "public func finishLiveOutput("
+      }
+    }
+  ],
+  "cAbiMarkers": [
+    "fluvora_client_new(",
+    "fluvora_client_set_access_token(",
+    "fluvora_create_room(",
+    "fluvora_get_room(",
+    "fluvora_room_command(",
+    "fluvora_send_chat(",
+    "fluvora_send_custom_data(",
+    "fluvora_exchange_offer(",
+    "fluvora_post_signal(",
+    "fluvora_poll_signals(",
+    "fluvora_get_ice_configuration("
+  ],
+  "webRtcAdapterMarkers": {
+    "rust": "pub struct CallbackWebRtcPeer",
+    "android": "public class CallbackWebRtcPeer",
+    "ios": "public struct CallbackWebRTCPeer"
+  },
+  "trustedGiftFields": [
+    "provider",
+    "provider_timestamp_millis",
+    "provider_signature",
+    "sender_id",
+    "recipient_id",
+    "transaction_id",
+    "gift_id",
+    "quantity",
+    "unit_value",
+    "currency"
+  ]
+}

@@ -1,0 +1,39 @@
+[package]
+name = "fluvora-api-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+async-nats = "0.50"
+axum = { version = "0.8", features = ["ws"] }
+base64 = "0.22"
+fluvora-auth = { path = "../../control-plane/auth" }
+fluvora-control-store = { path = "../../control-plane/control-store" }
+fluvora-domain = { path = "../../foundation/domain" }
+fluvora-dtls-adapter = { path = "../../webrtc/dtls-adapter" }
+fluvora-event-dispatcher = { path = "../../control-plane/event-dispatcher" }
+fluvora-observability = { path = "../../foundation/observability" }
+fluvora-protocol = { path = "../../foundation/protocol" }
+fluvora-sdp = { path = "../../webrtc/sdp" }
+fluvora-status-client = { path = "../../control-plane/status-client" }
+fluvora-status-service = { path = "../../control-plane/status-service" }
+fluvora-turn = { path = "../../webrtc/turn" }
+fluvora-transcode-bridge = { path = "../../media/transcode-bridge" }
+futures-util = "0.3"
+getrandom = "0.3"
+hmac = "0.12"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tower-http = { version = "0.6", features = ["cors"] }
+url = "2"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tempfile = "3"

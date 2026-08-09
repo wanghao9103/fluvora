@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluvora-turn
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 1}
+  selector:
+    matchLabels: {app: fluvora-turn}
+  template:
+    metadata:
+      labels: {app: fluvora-turn}
+      annotations: {prometheus.io/scrape: "true", prometheus.io/port: "8094"}
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: turn
+          image: ghcr.io/fluvora/fluvora
+          command: [fluvora-turn-server]
+          envFrom:
+            - configMapRef: {name: fluvora-config}
+            - secretRef: {name: fluvora-secrets}
+          env:
+            - name: NODE_NAME
+              valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
+            - name: FLUVORA_NODE_ID
+              value: "turn-$(NODE_NAME)"
+            - name: HOST_IP
+              valueFrom: {fieldRef: {fieldPath: status.hostIP}}
+            - name: FLUVORA_TURN_ADVERTISED_IP
+              value: "$(HOST_IP)"
+          ports:
+            - {name: turn-udp, containerPort: 3478, protocol: UDP}
+            - {name: turn-tcp, containerPort: 3478, protocol: TCP}
+            - {name: turns, containerPort: 5349, protocol: TCP}
+            - {name: metrics, containerPort: 8094}
+          volumeMounts:
+            - {name: dtls, mountPath: /certs, readOnly: true}
+          readinessProbe: {httpGet: {path: /health/live, port: metrics}, periodSeconds: 5}
+          livenessProbe: {httpGet: {path: /health/live, port: metrics}, periodSeconds: 10}
+          startupProbe: {httpGet: {path: /health/live, port: metrics}, periodSeconds: 2, failureThreshold: 30}
+          resources:
+            requests: {cpu: 250m, memory: 256Mi}
+            limits: {cpu: "2", memory: 2Gi}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      volumes:
+        - name: dtls
+          secret: {secretName: fluvora-dtls}

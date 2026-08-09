@@ -1,0 +1,89 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Healthy nodes",
+      "id": 1,
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
+      "targets": [{"expr": "fluvora_status_healthy_nodes", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "Active rooms",
+      "id": 2,
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0},
+      "targets": [{"expr": "max(fluvora_status_rooms)", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "WebRTC sessions",
+      "id": 3,
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
+      "targets": [{"expr": "max(fluvora_active_sessions)", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "TURN allocations",
+      "id": 4,
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 0},
+      "targets": [{"expr": "fluvora_turn_active_allocations", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "RTP packet rate",
+      "id": 5,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+      "targets": [
+        {"expr": "rate(fluvora_rtp_packets_received_total[1m])", "legendFormat": "received", "refId": "A"},
+        {"expr": "rate(fluvora_rtp_packets_sent_total[1m])", "legendFormat": "sent", "refId": "B"},
+        {"expr": "rate(fluvora_packets_dropped_total[1m])", "legendFormat": "dropped", "refId": "C"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DataChannel messages",
+      "id": 6,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
+      "targets": [
+        {"expr": "rate(fluvora_data_channel_messages_received_total[1m])", "legendFormat": "received", "refId": "A"},
+        {"expr": "rate(fluvora_data_channel_messages_sent_total[1m])", "legendFormat": "sent", "refId": "B"},
+        {"expr": "rate(fluvora_data_channel_rejections_total[1m])", "legendFormat": "rejected", "refId": "C"},
+        {"expr": "rate(fluvora_data_channel_messages_abandoned_total[1m])", "legendFormat": "partial-abandoned", "refId": "D"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Packet processing latency p95",
+      "id": 7,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 13},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fluvora_packet_processing_micros_bucket[5m])))",
+          "legendFormat": "p95 μs",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker jobs",
+      "id": 8,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 13},
+      "targets": [
+        {"expr": "fluvora_worker_jobs", "legendFormat": "{{state}}", "refId": "A"}
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": ["fluvora", "webrtc", "sfu"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timezone": "browser",
+  "title": "Fluvora Overview",
+  "uid": "fluvora-overview",
+  "version": 1
+}

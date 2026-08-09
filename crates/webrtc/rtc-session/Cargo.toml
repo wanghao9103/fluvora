@@ -1,0 +1,20 @@
+[package]
+name = "fluvora-rtc-session"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+fluvora-dtls-adapter = { path = "../dtls-adapter" }
+fluvora-ice-lite = { path = "../ice-lite" }
+fluvora-rtc-datagram = { path = "../rtc-datagram" }
+fluvora-rtcp = { path = "../rtcp" }
+fluvora-rtp = { path = "../rtp" }
+fluvora-srtp = { path = "../srtp" }
+
+[dev-dependencies]
+fluvora-stun = { path = "../stun" }
+
+[lints]
+workspace = true

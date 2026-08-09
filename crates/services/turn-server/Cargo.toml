@@ -1,0 +1,30 @@
+[package]
+name = "fluvora-turn-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+axum = "0.8"
+base64 = "0.22"
+fluvora-domain = { path = "../../foundation/domain" }
+fluvora-stun = { path = "../../webrtc/stun" }
+fluvora-status-client = { path = "../../control-plane/status-client" }
+fluvora-status-service = { path = "../../control-plane/status-service" }
+fluvora-turn = { path = "../../webrtc/turn" }
+getrandom = "0.3"
+hmac = "0.12"
+rustls-native-certs = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tokio-rustls = "0.26"
+
+[dev-dependencies]
+rcgen = "0.14"
+tempfile = "3"
+
+[lints]
+workspace = true

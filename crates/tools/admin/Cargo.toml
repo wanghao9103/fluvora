@@ -1,0 +1,13 @@
+[package]
+name = "fluvora-admin"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+fluvora-auth = { path = "../../control-plane/auth" }
+getrandom = "0.3"
+
+[lints]
+workspace = true

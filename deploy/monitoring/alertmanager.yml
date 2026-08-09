@@ -1,0 +1,14 @@
+route:
+  receiver: default
+  group_by: [alertname, job]
+  group_wait: 15s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: default
+
+inhibit_rules:
+  - source_matchers: ['alertname="FluvoraServiceDown"']
+    target_matchers: ['severity="warning"']
+    equal: [job]

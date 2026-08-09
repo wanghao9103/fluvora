@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluvora-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: fluvora-gateway}
+  template:
+    metadata:
+      labels: {app: fluvora-gateway}
+      annotations: {prometheus.io/scrape: "true", prometheus.io/port: "8093"}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: gateway
+          image: ghcr.io/fluvora/fluvora
+          command: [fluvora-media-gateway]
+          envFrom:
+            - configMapRef: {name: fluvora-config}
+            - secretRef: {name: fluvora-secrets}
+          env:
+            - name: FLUVORA_NODE_ID
+              valueFrom: {fieldRef: {fieldPath: metadata.name}}
+            - name: POD_IP
+              valueFrom: {fieldRef: {fieldPath: status.podIP}}
+            - name: FLUVORA_CONTROL_ADVERTISE_URL
+              value: "http://$(POD_IP):8093"
+          ports:
+            - {name: http, containerPort: 8093}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+          readinessProbe: {httpGet: {path: /health/ready, port: http}, periodSeconds: 5}
+          livenessProbe: {httpGet: {path: /health/live, port: http}, periodSeconds: 10}
+          startupProbe: {httpGet: {path: /health/live, port: http}, periodSeconds: 2, failureThreshold: 60}
+          resources:
+            requests: {cpu: 250m, memory: 256Mi}
+            limits: {cpu: "2", memory: 1Gi}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: fluvora-data}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluvora-gateway
+spec:
+  selector: {app: fluvora-gateway}
+  ports:
+    - {name: http, port: 8093, targetPort: http}

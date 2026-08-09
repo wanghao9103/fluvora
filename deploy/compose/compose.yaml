@@ -1,0 +1,393 @@
+name: fluvora
+
+x-image: &fluvora-image
+  image: fluvora:local
+  build:
+    context: ../..
+    dockerfile: deploy/docker/Dockerfile
+
+x-security: &fluvora-security
+  restart: unless-stopped
+  read_only: true
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  tmpfs:
+    - /tmp:size=256m,mode=1777
+  networks:
+    - fluvora
+
+x-heartbeat: &fluvora-heartbeat
+  FLUVORA_STATUS_URL: http://status:8090
+  FLUVORA_STATUS_ALLOW_INSECURE: "true"
+  FLUVORA_STATUS_TOKEN: ${FLUVORA_STATUS_TOKEN:?set FLUVORA_STATUS_TOKEN}
+  FLUVORA_REGION: ${FLUVORA_REGION:-local}
+  FLUVORA_BUILD_VERSION: ${FLUVORA_BUILD_VERSION:-dev}
+
+services:
+  postgres:
+    image: postgres:18.4-alpine3.23
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fluvora
+      POSTGRES_USER: fluvora
+      POSTGRES_PASSWORD: ${FLUVORA_POSTGRES_PASSWORD:?set FLUVORA_POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes:
+      - postgres:/var/lib/postgresql
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+      - /var/run/postgresql:size=16m,mode=3775
+    networks:
+      - fluvora
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fluvora -d fluvora"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  nats:
+    image: nats:2.14.3-alpine
+    restart: unless-stopped
+    command:
+      - --jetstream
+      - --store_dir=/data
+      - --http_port=8222
+      - --auth=${FLUVORA_NATS_TOKEN:?set FLUVORA_NATS_TOKEN}
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - nats:/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    networks:
+      - fluvora
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8222/healthz"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  certificate-init:
+    <<: [*fluvora-image, *fluvora-security]
+    restart: "no"
+    user: "0:0"
+    cap_add:
+      - CHOWN
+    command:
+      - sh
+      - -ec
+      - |
+        if [ ! -s /certs/dtls.crt ] || [ ! -s /certs/dtls.key ]; then
+          openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes \
+            -keyout /certs/dtls.key -out /certs/dtls.crt -days 365 \
+            -subj /CN=fluvora \
+            -addext "subjectAltName=DNS:fluvora-media-node,DNS:media-node,DNS:turn,IP:${FLUVORA_PUBLIC_IP:-127.0.0.1}"
+        fi
+        chown 0:10001 /certs/dtls.crt /certs/dtls.key
+        chmod 644 /certs/dtls.crt
+        chmod 640 /certs/dtls.key
+    volumes:
+      - certificates:/certs
+
+  status:
+    <<: [*fluvora-image, *fluvora-security]
+    command: ["fluvora-status-service"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FLUVORA_STATUS_BIND: 0.0.0.0:8090
+      FLUVORA_STATUS_TOKEN: ${FLUVORA_STATUS_TOKEN:?set FLUVORA_STATUS_TOKEN}
+      FLUVORA_DATABASE_URL: postgresql://fluvora:${FLUVORA_POSTGRES_PASSWORD:?set FLUVORA_POSTGRES_PASSWORD}@postgres:5432/fluvora
+      FLUVORA_DATABASE_MAX_CONNECTIONS: "8"
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8090/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  event-dispatcher:
+    <<: [*fluvora-image, *fluvora-security]
+    command: ["fluvora-event-dispatcher"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      status:
+        condition: service_healthy
+    environment:
+      <<: *fluvora-heartbeat
+      FLUVORA_NODE_ID: event-dispatcher-1
+      FLUVORA_EVENT_DISPATCHER_BIND: 0.0.0.0:8095
+      FLUVORA_DATABASE_URL: postgresql://fluvora:${FLUVORA_POSTGRES_PASSWORD:?set FLUVORA_POSTGRES_PASSWORD}@postgres:5432/fluvora
+      FLUVORA_DATABASE_MAX_CONNECTIONS: "8"
+      FLUVORA_NATS_URL: nats://nats:4222
+      FLUVORA_NATS_TOKEN: ${FLUVORA_NATS_TOKEN:?set FLUVORA_NATS_TOKEN}
+      FLUVORA_EVENT_STREAM: FLUVORA_EVENTS
+      FLUVORA_EVENT_SUBJECT: fluvora.events
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8095/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  media-node:
+    <<: [*fluvora-image, *fluvora-security]
+    command: ["fluvora-media-node"]
+    depends_on:
+      certificate-init:
+        condition: service_completed_successfully
+      status:
+        condition: service_healthy
+    environment:
+      <<: *fluvora-heartbeat
+      FLUVORA_NODE_ID: media-node-1
+      FLUVORA_MEDIA_UDP_BIND: 0.0.0.0:50000
+      FLUVORA_MEDIA_CONTROL_BIND: 0.0.0.0:8092
+      FLUVORA_CONTROL_ADVERTISE_URL: http://media-node:8092
+      FLUVORA_MEDIA_ADVERTISE_CANDIDATE: 1 1 UDP 2130706431 ${FLUVORA_PUBLIC_IP:-127.0.0.1} 50000 typ host
+      FLUVORA_MEDIA_CONTROL_TOKEN: ${FLUVORA_MEDIA_CONTROL_TOKEN:?set FLUVORA_MEDIA_CONTROL_TOKEN}
+      FLUVORA_MEDIA_MAX_SESSIONS: "10000"
+      FLUVORA_DTLS_CERT_PEM: /certs/dtls.crt
+      FLUVORA_DTLS_KEY_PEM: /certs/dtls.key
+      FLUVORA_DTLS_FINGERPRINT_FILE: /run/fluvora/dtls.sha256
+    ports:
+      - "50000:50000/udp"
+    volumes:
+      - certificates:/certs:ro
+      - runtime:/run/fluvora
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8092/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  worker:
+    <<: [*fluvora-image, *fluvora-security]
+    command: ["fluvora-media-worker"]
+    depends_on:
+      status:
+        condition: service_healthy
+    environment:
+      <<: *fluvora-heartbeat
+      FLUVORA_NODE_ID: media-worker-1
+      FLUVORA_CONTROL_ADVERTISE_URL: http://worker:8091
+      FLUVORA_WORKER_BIND: 0.0.0.0:8091
+      FLUVORA_WORKER_TOKEN: ${FLUVORA_WORKER_TOKEN:?set FLUVORA_WORKER_TOKEN}
+      FLUVORA_WORKER_CONCURRENCY: "2"
+      FLUVORA_FFMPEG: ffmpeg
+      FLUVORA_FFPROBE: ffprobe
+      FLUVORA_WORKER_INPUT_ROOT: /data/input
+      FLUVORA_WORKER_OUTPUT_ROOT: /data/output
+      FLUVORA_WORKER_LIVE_ROOT: /data/live
+      FLUVORA_WORKER_STATE_ROOT: /data/worker-state
+    volumes:
+      - media:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8091/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  gateway:
+    <<: [*fluvora-image, *fluvora-security]
+    command: ["fluvora-media-gateway"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+      media-node:
+        condition: service_healthy
+    environment:
+      <<: *fluvora-heartbeat
+      FLUVORA_NODE_ID: media-gateway-1
+      FLUVORA_CONTROL_ADVERTISE_URL: http://gateway:8093
+      FLUVORA_GATEWAY_BIND: 0.0.0.0:8093
+      FLUVORA_GATEWAY_TOKEN: ${FLUVORA_GATEWAY_TOKEN:?set FLUVORA_GATEWAY_TOKEN}
+      FLUVORA_DATABASE_URL: postgresql://fluvora:${FLUVORA_POSTGRES_PASSWORD:?set FLUVORA_POSTGRES_PASSWORD}@postgres:5432/fluvora
+      FLUVORA_DATABASE_MAX_CONNECTIONS: "8"
+      FLUVORA_WORKER_URL: http://worker:8091
+      FLUVORA_WORKER_TOKEN: ${FLUVORA_WORKER_TOKEN:?set FLUVORA_WORKER_TOKEN}
+      FLUVORA_MEDIA_CONTROL_URL: http://media-node:8092
+      FLUVORA_MEDIA_CONTROL_TOKEN: ${FLUVORA_MEDIA_CONTROL_TOKEN:?set FLUVORA_MEDIA_CONTROL_TOKEN}
+      FLUVORA_STORAGE_ROOT: /data
+      FLUVORA_OBJECT_STORE_BUCKET: ${FLUVORA_OBJECT_STORE_BUCKET:-}
+      FLUVORA_OBJECT_STORE_REGION: ${FLUVORA_OBJECT_STORE_REGION:-us-east-1}
+      FLUVORA_OBJECT_STORE_ENDPOINT: ${FLUVORA_OBJECT_STORE_ENDPOINT:-}
+      FLUVORA_OBJECT_STORE_ACCESS_KEY: ${FLUVORA_OBJECT_STORE_ACCESS_KEY:-}
+      FLUVORA_OBJECT_STORE_SECRET_KEY: ${FLUVORA_OBJECT_STORE_SECRET_KEY:-}
+      FLUVORA_OBJECT_STORE_PREFIX: ${FLUVORA_OBJECT_STORE_PREFIX:-fluvora}
+      FLUVORA_OBJECT_STORE_ALLOW_HTTP: ${FLUVORA_OBJECT_STORE_ALLOW_HTTP:-false}
+      FLUVORA_VOD_RETENTION_HOURS: ${FLUVORA_VOD_RETENTION_HOURS:-0}
+      FLUVORA_LIVE_RETENTION_HOURS: ${FLUVORA_LIVE_RETENTION_HOURS:-0}
+      FLUVORA_PUBLIC_MEDIA_BASE_URL: ${FLUVORA_PUBLIC_MEDIA_BASE_URL:-http://127.0.0.1:8093}
+      FLUVORA_CORS_ORIGINS: ${FLUVORA_CORS_ORIGINS:-http://127.0.0.1:3000,http://localhost:3000}
+    ports:
+      - "8093:8093"
+    volumes:
+      - media:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8093/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  turn:
+    <<: [*fluvora-image, *fluvora-security]
+    command: ["fluvora-turn-server"]
+    depends_on:
+      certificate-init:
+        condition: service_completed_successfully
+      status:
+        condition: service_healthy
+    environment:
+      <<: *fluvora-heartbeat
+      FLUVORA_NODE_ID: turn-1
+      FLUVORA_TURN_BIND: 0.0.0.0:3478
+      FLUVORA_TURN_TLS_BIND: 0.0.0.0:5349
+      FLUVORA_TURN_STATUS_BIND: 0.0.0.0:8094
+      FLUVORA_TURN_ADVERTISED_IP: ${FLUVORA_PUBLIC_IP:-127.0.0.1}
+      FLUVORA_TURN_RELAY_BIND_IP: 0.0.0.0
+      FLUVORA_TURN_RELAY_PORT_MIN: "49152"
+      FLUVORA_TURN_RELAY_PORT_MAX: "49251"
+      FLUVORA_TURN_ALLOW_PRIVATE_PEERS: ${FLUVORA_TURN_ALLOW_PRIVATE_PEERS:-true}
+      FLUVORA_TURN_MAX_RELAY_BYTES_PER_SECOND: "5000000"
+      FLUVORA_TURN_MAX_ALLOCATIONS: "100"
+      FLUVORA_TURN_MAX_ALLOCATIONS_PER_IP: "16"
+      FLUVORA_TURN_USERNAME: ${FLUVORA_TURN_USERNAME:?set FLUVORA_TURN_USERNAME}
+      FLUVORA_TURN_PASSWORD: ${FLUVORA_TURN_PASSWORD:?set FLUVORA_TURN_PASSWORD}
+      FLUVORA_TURN_REALM: ${FLUVORA_TURN_REALM:?set FLUVORA_TURN_REALM}
+      FLUVORA_TURN_NONCE_SECRET: ${FLUVORA_TURN_NONCE_SECRET:?set FLUVORA_TURN_NONCE_SECRET}
+      FLUVORA_TURN_REST_SECRET: ${FLUVORA_TURN_REST_SECRET:?set FLUVORA_TURN_REST_SECRET}
+      FLUVORA_TRANSCODE_GLOBAL_JOBS: "128"
+      FLUVORA_TRANSCODE_TENANT_JOBS: "16"
+      FLUVORA_TURN_TLS_CERT: /certs/dtls.crt
+      FLUVORA_TURN_TLS_KEY: /certs/dtls.key
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+      - "5349:5349/tcp"
+      - "49152-49251:49152-49251/udp"
+    volumes:
+      - certificates:/certs:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8094/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    <<: [*fluvora-image, *fluvora-security]
+    command: ["fluvora-api-server"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      event-dispatcher:
+        condition: service_healthy
+      media-node:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+      turn:
+        condition: service_healthy
+    environment:
+      <<: *fluvora-heartbeat
+      FLUVORA_NODE_ID: api-1
+      FLUVORA_API_BIND: 0.0.0.0:8080
+      FLUVORA_TOKEN_SECRET: ${FLUVORA_TOKEN_SECRET:?set FLUVORA_TOKEN_SECRET}
+      FLUVORA_TOKEN_SECRETS: ${FLUVORA_TOKEN_SECRETS:-}
+      FLUVORA_GIFT_WEBHOOK_SECRET: ${FLUVORA_GIFT_WEBHOOK_SECRET:?set FLUVORA_GIFT_WEBHOOK_SECRET}
+      FLUVORA_DATABASE_URL: postgresql://fluvora:${FLUVORA_POSTGRES_PASSWORD:?set FLUVORA_POSTGRES_PASSWORD}@postgres:5432/fluvora
+      FLUVORA_DATABASE_MAX_CONNECTIONS: "16"
+      FLUVORA_NATS_URL: nats://nats:4222
+      FLUVORA_NATS_TOKEN: ${FLUVORA_NATS_TOKEN:?set FLUVORA_NATS_TOKEN}
+      FLUVORA_EVENT_SUBJECT: fluvora.events
+      FLUVORA_DTLS_FINGERPRINT_FILE: /run/fluvora/dtls.sha256
+      FLUVORA_ICE_CANDIDATE: 1 1 UDP 2130706431 ${FLUVORA_PUBLIC_IP:-127.0.0.1} 50000 typ host
+      FLUVORA_ICE_URLS: stun:${FLUVORA_PUBLIC_IP:-127.0.0.1}:3478,turn:${FLUVORA_PUBLIC_IP:-127.0.0.1}:3478?transport=udp,turn:${FLUVORA_PUBLIC_IP:-127.0.0.1}:3478?transport=tcp,turns:${FLUVORA_PUBLIC_IP:-127.0.0.1}:5349?transport=tcp
+      FLUVORA_MEDIA_CONTROL_URL: http://media-node:8092
+      FLUVORA_MEDIA_CONTROL_TOKEN: ${FLUVORA_MEDIA_CONTROL_TOKEN:?set FLUVORA_MEDIA_CONTROL_TOKEN}
+      FLUVORA_GATEWAY_URL: http://gateway:8093
+      FLUVORA_GATEWAY_TOKEN: ${FLUVORA_GATEWAY_TOKEN:?set FLUVORA_GATEWAY_TOKEN}
+      FLUVORA_WORKER_URL: http://worker:8091
+      FLUVORA_WORKER_TOKEN: ${FLUVORA_WORKER_TOKEN:?set FLUVORA_WORKER_TOKEN}
+      FLUVORA_TURN_REST_SECRET: ${FLUVORA_TURN_REST_SECRET:?set FLUVORA_TURN_REST_SECRET}
+      FLUVORA_STATE_DIR: /data/control
+      FLUVORA_CORS_ORIGINS: ${FLUVORA_CORS_ORIGINS:-http://127.0.0.1:3000,http://localhost:3000}
+    ports:
+      - "8080:8080"
+    volumes:
+      - control:/data/control
+      - runtime:/run/fluvora:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus:/prometheus
+    networks:
+      - fluvora
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    restart: unless-stopped
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    ports:
+      - "9093:9093"
+    volumes:
+      - ../monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks:
+      - fluvora
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana:/var/lib/grafana
+    networks:
+      - fluvora
+
+networks:
+  fluvora:
+
+volumes:
+  certificates:
+  control:
+  grafana:
+  media:
+  nats:
+  prometheus:
+  postgres:
+  runtime:

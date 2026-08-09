@@ -1,0 +1,12 @@
+[package]
+name = "fluvora-ice-lite"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+fluvora-stun = { path = "../stun" }
+
+[lints]
+workspace = true

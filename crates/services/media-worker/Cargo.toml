@@ -1,0 +1,22 @@
+[package]
+name = "fluvora-media-worker"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+axum = "0.8"
+fluvora-domain = { path = "../../foundation/domain" }
+fluvora-media-pipeline = { path = "../../media/media-pipeline" }
+fluvora-status-client = { path = "../../control-plane/status-client" }
+fluvora-status-service = { path = "../../control-plane/status-service" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["fs", "macros", "net", "process", "rt-multi-thread", "signal", "sync", "time"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

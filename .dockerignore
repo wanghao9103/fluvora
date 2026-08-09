@@ -1,0 +1,16 @@
+target
+.git
+.github
+.idea
+.vscode
+**/node_modules
+**/dist
+data
+artifacts
+coverage
+.tmp-*
+*.log
+*.pid
+.env
+.env.*
+!.env.example

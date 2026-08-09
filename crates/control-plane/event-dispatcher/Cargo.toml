@@ -1,0 +1,30 @@
+[package]
+name = "fluvora-event-dispatcher"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow = "1"
+async-nats = "0.50"
+axum = "0.8"
+fluvora-control-store = { path = "../control-store" }
+fluvora-status-client = { path = "../status-client" }
+fluvora-status-service = { path = "../status-service" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = [
+    "macros",
+    "net",
+    "rt-multi-thread",
+    "signal",
+    "sync",
+    "time",
+] }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+futures-util = "0.3"
