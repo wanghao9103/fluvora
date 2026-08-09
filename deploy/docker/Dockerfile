@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM rust:1.96.0-bookworm AS builder
+FROM rust:1.97.1-bookworm AS builder
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libssl-dev pkg-config \
