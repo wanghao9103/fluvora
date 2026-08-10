@@ -1,5 +1,7 @@
 # SDK 示例交付规范
 
+[简体中文](SDK_DEMOS.md) | [English](en/SDK_DEMOS.md)
+
 实际业务接入步骤、平台依赖、WebRTC 适配器契约、错误重试和资源释放见
 [《SDK 接入指南》](SDK_INTEGRATION.md)。本文只定义可运行示例的交付和验收范围。
 

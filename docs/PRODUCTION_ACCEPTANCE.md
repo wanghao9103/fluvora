@@ -1,5 +1,7 @@
 # Production v1 验收门禁
 
+[简体中文](PRODUCTION_ACCEPTANCE.md) | [English](en/PRODUCTION_ACCEPTANCE.md)
+
 Fluvora 只有在下列自动门禁和环境认证同时满足时才能发布。代码存在不等于生产环境认证完成。
 
 ## 自动门禁

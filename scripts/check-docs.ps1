@@ -1,8 +1,7 @@
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$requiredDocuments = @(
+$coreDocuments = @(
     "README.md",
-    "docs/README.md",
     "docs/ARCHITECTURE.md",
     "docs/LAYERS.md",
     "docs/CODEBASE.md",
@@ -11,14 +10,76 @@ $requiredDocuments = @(
     "docs/SDK_INTEGRATION.md",
     "docs/SDK_DEMOS.md",
     "docs/PRODUCTION_ACCEPTANCE.md",
-    "docs/RUNBOOK.md"
+    "docs/RUNBOOK.md",
+    "docs/DEVELOPMENT_PLAN.md"
 )
+$englishDocuments = @(
+    "README.en.md",
+    "docs/en/README.md",
+    "docs/en/ARCHITECTURE.md",
+    "docs/en/LAYERS.md",
+    "docs/en/CODEBASE.md",
+    "docs/en/API_SERVER_STRUCTURE.md",
+    "docs/en/API.md",
+    "docs/en/SDK_INTEGRATION.md",
+    "docs/en/SDK_DEMOS.md",
+    "docs/en/PRODUCTION_ACCEPTANCE.md",
+    "docs/en/RUNBOOK.md",
+    "docs/en/DEVELOPMENT_PLAN.md"
+)
+$requiredDocuments = @($coreDocuments + "docs/README.md" + $englishDocuments)
 
 $violations = [System.Collections.Generic.List[string]]::new()
 foreach ($relativePath in $requiredDocuments) {
     $path = Join-Path $projectRoot $relativePath
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         $violations.Add("missing required document: $relativePath")
+    }
+}
+
+$languagePairs = @(
+    [pscustomobject]@{
+        Chinese = "README.md"
+        English = "README.en.md"
+        ChineseSwitch = "[English](README.en.md)"
+        EnglishSwitch = "](README.md) | [English](README.en.md)"
+    }
+)
+$documentationNames = @(
+    "README.md",
+    "ARCHITECTURE.md",
+    "LAYERS.md",
+    "CODEBASE.md",
+    "API_SERVER_STRUCTURE.md",
+    "API.md",
+    "SDK_INTEGRATION.md",
+    "SDK_DEMOS.md",
+    "PRODUCTION_ACCEPTANCE.md",
+    "RUNBOOK.md",
+    "DEVELOPMENT_PLAN.md"
+)
+foreach ($name in $documentationNames) {
+    $languagePairs += [pscustomobject]@{
+        Chinese = "docs/$name"
+        English = "docs/en/$name"
+        ChineseSwitch = "[English](en/$name)"
+        EnglishSwitch = "](../$name) | [English]($name)"
+    }
+}
+foreach ($pair in $languagePairs) {
+    $chinesePath = Join-Path $projectRoot $pair.Chinese
+    $englishPath = Join-Path $projectRoot $pair.English
+    if (-not (Test-Path -LiteralPath $chinesePath -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $englishPath -PathType Leaf)) {
+        continue
+    }
+    $chinese = Get-Content -LiteralPath $chinesePath -Raw -Encoding utf8
+    $english = Get-Content -LiteralPath $englishPath -Raw -Encoding utf8
+    if (-not $chinese.Contains($pair.ChineseSwitch)) {
+        $violations.Add("missing language switch in $($pair.Chinese)")
+    }
+    if (-not $english.Contains($pair.EnglishSwitch)) {
+        $violations.Add("missing language switch in $($pair.English)")
     }
 }
 
@@ -61,10 +122,11 @@ if ($violations.Count -ne 0) {
 
 Write-Host (
     (
-        "Documentation check passed: {0} required documents, {1} Markdown files, " +
-        "and {2} local links verified."
+        "Documentation check passed: {0} required documents, {1} bilingual pairs, " +
+        "{2} Markdown files, and {3} local links verified."
     ) -f
     $requiredDocuments.Count,
+    $languagePairs.Count,
     $markdownFiles.Count,
     $linkCount
 )

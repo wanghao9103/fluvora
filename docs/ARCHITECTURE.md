@@ -1,5 +1,7 @@
 # Fluvora 架构设计
 
+[简体中文](ARCHITECTURE.md) | [English](en/ARCHITECTURE.md)
+
 状态：Production Candidate v1（自动门禁已实现，真实基础设施认证见验收文档）  
 项目名：Fluvora（澜曜）  
 后端：Rust 2024 Edition

@@ -1,5 +1,7 @@
 # Fluvora 生产化开发周期
 
+[简体中文](DEVELOPMENT_PLAN.md) | [English](en/DEVELOPMENT_PLAN.md)
+
 计划起点：2026-07-27  
 Production v1 目标：2027-07-25  
 周期：52 周，26 个双周 Sprint  

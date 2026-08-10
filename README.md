@@ -1,5 +1,7 @@
 # Fluvora（澜曜）
 
+[简体中文](README.md) | [English](README.en.md)
+
 Fluvora 是一个 Rust 流媒体平台参考实现。实时媒体核心从零实现，不接入现成 WebRTC/SFU
 服务器内核；通用密码原语交给 OpenSSL/RustCrypto，音视频编解码与封装交给 FFmpeg。
 

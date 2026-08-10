@@ -1,5 +1,7 @@
 # API 服务内部设计
 
+[简体中文](API_SERVER_STRUCTURE.md) | [English](en/API_SERVER_STRUCTURE.md)
+
 状态：已实现并由架构门禁约束  
 适用范围：`crates/services/api-server`  
 关联文档：[总体架构](ARCHITECTURE.md)、[代码库分层](LAYERS.md)、[公开 API](API.md)

@@ -1,5 +1,7 @@
 # Fluvora SDK 接入指南
 
+[简体中文](SDK_INTEGRATION.md) | [English](en/SDK_INTEGRATION.md)
+
 状态：Production Candidate v1  
 适用平台：Web/TypeScript、Rust、C/C++、Android/Kotlin、iOS/Swift  
 关联文档：[公开 API](API.md)、[SDK 示例验收](SDK_DEMOS.md)、[可运行示例](../examples/README.md)

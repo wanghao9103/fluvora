@@ -1,5 +1,7 @@
 # Fluvora Production v1 运维手册
 
+[简体中文](RUNBOOK.md) | [English](en/RUNBOOK.md)
+
 本文约定生产环境的发布、回滚、备份恢复和常见故障处置。所有命令都必须先在对应环境的
 只读上下文中确认 namespace、集群和数据库目标；示例中的占位符不得直接执行。
 

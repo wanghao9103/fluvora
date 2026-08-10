@@ -1,5 +1,7 @@
 # 代码分层与依赖规则
 
+[简体中文](LAYERS.md) | [English](en/LAYERS.md)
+
 状态：已由 `scripts/check-architecture.ps1` 自动约束  
 关联文档：[代码库总览](CODEBASE.md)、[总体架构](ARCHITECTURE.md)、
 [API 服务内部设计](API_SERVER_STRUCTURE.md)

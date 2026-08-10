@@ -1,5 +1,7 @@
 # Fluvora API 与 SDK 接口
 
+[简体中文](API.md) | [English](en/API.md)
+
 本文描述 Production Candidate v1 的公共控制接口。默认入口为 `http://127.0.0.1:8080`，所有
 `/v1` 请求均使用：
 

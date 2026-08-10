@@ -1,5 +1,7 @@
 # Fluvora 文档索引
 
+[简体中文](README.md) | [English](en/README.md)
+
 本文是仓库文档入口。设计、接口、运行和验收信息按职责拆分；同一事实只保留一个主要来源，其他
 文档通过链接引用，避免多处描述逐渐不一致。
 
@@ -58,6 +60,7 @@
 - 新增服务或 workspace crate 时同步 `ARCHITECTURE.md`、`LAYERS.md` 和 `CODEBASE.md`；
 - 调整 API 内部分层时同步 `API_SERVER_STRUCTURE.md` 和架构门禁；
 - 修改配置、端口、指标或恢复流程时同步 `RUNBOOK.md`；
+- 中文和英文文档必须在同一次变更中同步更新，并保留页首双向语言切换；
 - 每次 full release gate 的结果以 `artifacts/release-gates-*/release-gates.json` 为证据；
 - Markdown 使用 UTF-8、LF 和仓库 `.editorconfig`，链接使用仓库相对路径。
 
