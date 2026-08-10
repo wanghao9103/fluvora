@@ -2,7 +2,8 @@ param(
     [string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot),
     [string]$TargetDirectory = (Join-Path $env:LOCALAPPDATA "Fluvora\target"),
     [string]$VisualStudioEnvironment = "",
-    [string]$PerlBin = ""
+    [string]$PerlBin = "",
+    [switch]$BuildRelease
 )
 
 $ErrorActionPreference = "Stop"
@@ -76,6 +77,12 @@ try {
     Invoke-Cargo @(
         "test", "-p", "fluvora-dtls-adapter", "--features", "openssl-vendored", "--locked"
     )
+    if ($BuildRelease) {
+        Invoke-Cargo @(
+            "build", "--release", "-p", "fluvora-media-node",
+            "--features", "openssl-vendored", "--locked"
+        )
+    }
 }
 finally {
     Pop-Location

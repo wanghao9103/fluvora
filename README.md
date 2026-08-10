@@ -74,6 +74,16 @@ npm run check
 npm run build
 ```
 
+从干净提交构建带版本号的候选交付包：
+
+```powershell
+./scripts/build-release.ps1 -CiRunUrl "https://github.com/<owner>/<repo>/actions/runs/<id>"
+```
+
+脚本校验 Cargo、Web 与 Android 版本一致性，执行快速发布门禁，并输出服务端二进制、五端 SDK
+产物/示例、双语文档、源码快照、构建证据和 SHA-256 校验和到 `artifacts/releases/`。候选包不会
+自动创建 Git tag、GitHub Release，也不会发布到 npm、Maven 或其他公共仓库。
+
 五端 SDK 接入示例见 [`examples/README.md`](examples/README.md)，覆盖建房/入房、SFU、
 P2P 信令、ICE、聊天、自定义数据和资源清理。详细能力矩阵及原生 WebRTC 引擎边界见
 [`docs/SDK_DEMOS.md`](docs/SDK_DEMOS.md)。

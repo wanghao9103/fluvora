@@ -22,7 +22,8 @@ configuration when direct ICE cannot connect.
 without requiring the application to run its own packager.
 
 The build pins Android Gradle Plugin 9.2.0, Kotlin 2.3.21, coroutines 1.11.0, and serialization
-1.11.0.
+1.11.0. Use the checked-in Gradle 9.4.1 wrapper (`./gradlew`) so local and CI builds use the same
+toolchain.
 
 The HTTP client rejects credential-bearing or ambiguous base URLs and access tokens containing
 control characters. Requests do not follow redirects. JSON responses are streamed into bounded

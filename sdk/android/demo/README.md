@@ -5,7 +5,7 @@ WebRTC injection point.
 
 ```bash
 cd sdk/android
-gradle :demo:assembleDebug
+./gradlew :demo:assembleDebug
 ```
 
 The emulator reaches a host API at `http://10.0.2.2:8080`. Paste a short-lived token and use the

@@ -184,7 +184,7 @@ jobs:
           gradle-version: "9.4.1"
       - working-directory: sdk/android
         run: >
-          gradle --no-daemon
+          ./gradlew --no-daemon --no-watch-fs
           :fluvora:testDebugUnitTest
           :fluvora:assembleRelease
           :demo:assembleDebug
