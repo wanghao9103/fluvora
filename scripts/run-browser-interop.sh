@@ -11,6 +11,18 @@ web_pid=""
 token_refresh_pid=""
 netem_enabled=""
 
+ice_host="${FLUVORA_ICE_HOST:-}"
+if [[ -z "$ice_host" ]]; then
+  ice_host="$(ip -4 route get 192.0.2.1 2>/dev/null | awk '{ for (i = 1; i <= NF; i++) if ($i == "src") { print $(i + 1); exit } }' || true)"
+fi
+if [[ -z "$ice_host" ]]; then
+  ice_host="$(hostname -I 2>/dev/null | awk '{ print $1 }' || true)"
+fi
+if [[ -z "$ice_host" ]]; then
+  echo "unable to determine the host address for the ICE candidate" >&2
+  exit 1
+fi
+
 cleanup() {
   exit_code=$?
   if [[ "$exit_code" -ne 0 ]]; then
@@ -59,7 +71,7 @@ if [[ "${FLUVORA_NETEM:-false}" == "true" ]]; then
   netem_enabled=true
 fi
 
-FLUVORA_MEDIA_UDP_BIND=127.0.0.1:51000 \
+FLUVORA_MEDIA_UDP_BIND="$ice_host:51000" \
 FLUVORA_MEDIA_CONTROL_BIND=127.0.0.1:18092 \
 FLUVORA_MEDIA_CONTROL_TOKEN=browser-e2e-media-control-token \
 FLUVORA_DTLS_CERT_PEM="$run_dir/cert.pem" \
@@ -78,7 +90,7 @@ FLUVORA_WORKER_TOKEN=browser-e2e-worker-token \
 FLUVORA_TURN_REST_SECRET=browser-e2e-turn-rest-secret-32-bytes-minimum \
 FLUVORA_GIFT_WEBHOOK_SECRET=browser-e2e-gift-webhook-secret-32-bytes-minimum \
 FLUVORA_DTLS_FINGERPRINT_FILE="$run_dir/fingerprint.txt" \
-FLUVORA_ICE_CANDIDATE="1 1 UDP 2130706431 127.0.0.1 51000 typ host" \
+FLUVORA_ICE_CANDIDATE="1 1 UDP 2130706431 $ice_host 51000 typ host" \
 FLUVORA_MEDIA_CONTROL_URL=http://127.0.0.1:18092 \
 FLUVORA_GATEWAY_URL=http://127.0.0.1:18193 \
 FLUVORA_WORKER_URL=http://127.0.0.1:18191 \

@@ -23,6 +23,15 @@ pub(crate) fn random_u64() -> Result<u64, ApiError> {
     Ok(u64::from_be_bytes(bytes))
 }
 
+pub(crate) fn random_sdp_session_id() -> Result<u64, ApiError> {
+    Ok(normalize_sdp_session_id(random_u64()?))
+}
+
+const fn normalize_sdp_session_id(random: u64) -> u64 {
+    let session_id = random & 0x7fff_ffff_ffff_ffff;
+    if session_id == 0 { 1 } else { session_id }
+}
+
 pub(crate) fn random_credential(bytes: usize) -> Result<String, ApiError> {
     let mut random = vec![0_u8; bytes];
     getrandom::fill(&mut random).map_err(internal_error)?;
@@ -50,5 +59,18 @@ pub(crate) async fn shutdown_signal() {
     #[cfg(not(unix))]
     {
         let _ = tokio::signal::ctrl_c().await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_sdp_session_id;
+
+    #[test]
+    fn sdp_session_identifiers_are_nonzero_signed_63_bit_values() {
+        for random in [0, 1, i64::MAX as u64, u64::MAX] {
+            let session_id = normalize_sdp_session_id(random);
+            assert!((1..=i64::MAX as u64).contains(&session_id));
+        }
     }
 }

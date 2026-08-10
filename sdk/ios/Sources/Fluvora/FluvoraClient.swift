@@ -704,8 +704,19 @@ public actor FluvoraClient {
 
     public func sendChat(
         roomId: String,
+        text: String
+    ) async throws -> CommandResult {
+        try await sendChat(
+            roomId: roomId,
+            text: text,
+            messageId: Self.randomIdentifier()
+        )
+    }
+
+    public func sendChat(
+        roomId: String,
         text: String,
-        messageId: String = Self.randomIdentifier()
+        messageId: String
     ) async throws -> CommandResult {
         try validateIdentifier(roomId)
         try validateIdentifier(messageId)

@@ -20,7 +20,9 @@ use crate::protocol::{
     require_content_type, require_current_etag, validate_protocol_direction,
     validate_trickle_fragment,
 };
-use crate::runtime::{MAX_PROTOCOL_SESSIONS, format_id, random_credential, random_u64};
+use crate::runtime::{
+    MAX_PROTOCOL_SESSIONS, format_id, random_credential, random_sdp_session_id, random_u64,
+};
 use crate::services::{
     authenticate, authorized_protocol_session, protocol_created_response, provision_media_session,
     require_publishing, require_realtime_server_room, require_room_member,
@@ -175,7 +177,7 @@ async fn negotiate_offer(
     if !fingerprint_algorithm.eq_ignore_ascii_case("sha-256") {
         return Err(invalid_sdp_field("fingerprint algorithm"));
     }
-    let session_id = random_u64()?;
+    let session_id = random_sdp_session_id()?;
     let local_username_fragment = random_credential(8)?;
     let local_password = random_credential(24)?;
     let tie_breaker = random_u64()?;

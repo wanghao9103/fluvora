@@ -335,13 +335,13 @@ pub fn process_memory_bytes() -> u64 {
         let Ok(status) = std::fs::read_to_string("/proc/self/status") else {
             return 0;
         };
-        return status
+        status
             .lines()
             .find_map(|line| line.strip_prefix("VmRSS:"))
             .and_then(|value| value.split_whitespace().next())
             .and_then(|value| value.parse::<u64>().ok())
             .and_then(|kilobytes| kilobytes.checked_mul(1_024))
-            .unwrap_or_default();
+            .unwrap_or_default()
     }
     #[cfg(not(target_os = "linux"))]
     {

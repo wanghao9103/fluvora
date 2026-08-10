@@ -283,8 +283,8 @@ async fn verify_room_transactions(store: &PostgresStore) -> String {
     ));
 
     let conflicting = StoredRoom {
-        revision: 3,
-        snapshot: json!({"schema_version": 1, "revision": 3}),
+        revision: 2,
+        snapshot: json!({"schema_version": 1, "revision": 2}),
         ..initial
     };
     assert_eq!(
@@ -292,7 +292,7 @@ async fn verify_room_transactions(store: &PostgresStore) -> String {
             .append_room_event(
                 &conflicting,
                 1,
-                &event(3, unique_id("conflict"), "room.member_joined"),
+                &event(2, unique_id("conflict"), "room.member_joined"),
                 None,
             )
             .await

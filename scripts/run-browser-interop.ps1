@@ -39,6 +39,29 @@ function Stop-OwnedProcess($Process) {
 
 New-Item -ItemType Directory -Force -Path $runRoot, (Join-Path $runRoot "state") | Out-Null
 try {
+    $iceAddress = $env:FLUVORA_ICE_HOST
+    if (-not $iceAddress) {
+        $routeProbe = [System.Net.Sockets.Socket]::new(
+            [System.Net.Sockets.AddressFamily]::InterNetwork,
+            [System.Net.Sockets.SocketType]::Dgram,
+            [System.Net.Sockets.ProtocolType]::Udp
+        )
+        try {
+            $routeProbe.Connect("192.0.2.1", 9)
+            $iceAddress = ([System.Net.IPEndPoint] $routeProbe.LocalEndPoint).Address.ToString()
+        }
+        catch {
+            $iceAddress = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+                Where-Object { $_.IPAddress -ne "127.0.0.1" -and $_.AddressState -eq "Preferred" } |
+                Select-Object -ExpandProperty IPAddress -First 1
+        }
+        finally {
+            $routeProbe.Dispose()
+        }
+    }
+    if (-not $iceAddress) {
+        throw "unable to determine the host address for the ICE candidate"
+    }
     $openssl = @(
         "C:\Program Files\Git\usr\bin\openssl.exe",
         "C:\Program Files\Git\mingw64\bin\openssl.exe"
@@ -70,7 +93,7 @@ try {
     }
 
     Remove-Item Env:FLUVORA_STATUS_URL -ErrorAction SilentlyContinue
-    $env:FLUVORA_MEDIA_UDP_BIND = "127.0.0.1:51000"
+    $env:FLUVORA_MEDIA_UDP_BIND = "${iceAddress}:51000"
     $env:FLUVORA_MEDIA_CONTROL_BIND = "127.0.0.1:18092"
     $env:FLUVORA_MEDIA_CONTROL_TOKEN = "browser-e2e-media-control-token"
     $env:FLUVORA_DTLS_CERT_PEM = $certificate
@@ -87,7 +110,7 @@ try {
     $env:FLUVORA_WORKER_TOKEN = "browser-e2e-worker-token"
     $env:FLUVORA_TURN_REST_SECRET = "browser-e2e-turn-rest-secret-32-bytes-minimum"
     $env:FLUVORA_GIFT_WEBHOOK_SECRET = "browser-e2e-gift-webhook-secret-32-bytes-minimum"
-    $env:FLUVORA_ICE_CANDIDATE = "1 1 UDP 2130706431 127.0.0.1 51000 typ host"
+    $env:FLUVORA_ICE_CANDIDATE = "1 1 UDP 2130706431 $iceAddress 51000 typ host"
     $env:FLUVORA_MEDIA_CONTROL_URL = "http://127.0.0.1:18092"
     $env:FLUVORA_GATEWAY_URL = "http://127.0.0.1:18193"
     $env:FLUVORA_WORKER_URL = "http://127.0.0.1:18191"
