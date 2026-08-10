@@ -21,8 +21,9 @@ link to it to prevent gradual divergence.
    cleanup, and troubleshooting for all five targets.
 2. [Public API](API.md): HTTP, WebSocket, WHIP/WHEP, and media-control interfaces.
 3. [SDK demo specification](SDK_DEMOS.md): runnable examples and platform capability coverage.
-4. [`sdk-contract-v1.json`](../sdk-contract-v1.json): machine-verifiable cross-platform contract.
-5. [`sdk-demo-contract-v1.json`](../sdk-demo-contract-v1.json): machine-verifiable demo coverage.
+4. [Independent SDK releases](SDK_RELEASES.md): version sources, changelog boundaries, tags, and candidates.
+5. [`sdk-contract-v1.json`](../sdk-contract-v1.json): machine-verifiable cross-platform contract.
+6. [`sdk-demo-contract-v1.json`](../sdk-demo-contract-v1.json): machine-verifiable demo coverage.
 
 ### Deployment and release
 
@@ -41,6 +42,7 @@ link to it to prevent gradual divergence.
 | `API.md` | Which public interfaces can clients call? | Route, field, status, or limit changes |
 | `SDK_INTEGRATION.md` | How do all five SDK targets install, connect, fail, and clean up? | Constructor, public method, or platform-boundary changes |
 | `SDK_DEMOS.md` | How are SDK capabilities demonstrated? | Public method or runnable-example changes |
+| `SDK_RELEASES.md` | How do SDKs version, build, and track changes independently? | SDK version, tag, or release-process changes |
 | `PRODUCTION_ACCEPTANCE.md` | Which checks are mandatory before release? | Gate, capacity, or security requirement changes |
 | `RUNBOOK.md` | How are production faults detected and handled? | Configuration, metric, alert, or recovery changes |
 | `DEVELOPMENT_PLAN.md` | How is the project delivered in phases? | Milestone, staffing, or scope changes |

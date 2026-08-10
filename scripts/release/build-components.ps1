@@ -169,10 +169,10 @@ function Build-AndroidSdk(
     New-Item -ItemType Directory -Force -Path $destination | Out-Null
     Copy-Item -LiteralPath (Join-Path $Context.ProjectRoot (
         "sdk\android\fluvora\build\outputs\aar\fluvora-release.aar"
-    )) -Destination (Join-Path $destination "fluvora-$($Context.Version).aar")
+    )) -Destination (Join-Path $destination "fluvora-$($Context.SdkVersions.android).aar")
     Copy-Item -LiteralPath (Join-Path $Context.ProjectRoot (
         "sdk\android\demo\build\outputs\apk\debug\demo-debug.apk"
-    )) -Destination (Join-Path $destination "fluvora-demo-$($Context.Version)-debug.apk")
+    )) -Destination (Join-Path $destination "fluvora-demo-$($Context.SdkVersions.android)-debug.apk")
     "built-and-tested"
 }
 

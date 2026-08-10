@@ -42,6 +42,7 @@ function Write-CandidatePackage(
         schemaVersion = 1
         product = "Fluvora"
         version = $Context.Version
+        sdkVersions = $Context.SdkVersions
         package = $Context.PackageName
         gitCommit = $Context.GitCommit
         generatedAt = [DateTimeOffset]::UtcNow.ToString("O")

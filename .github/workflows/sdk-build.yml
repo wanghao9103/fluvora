@@ -1,0 +1,57 @@
+name: Build One SDK
+
+on:
+  workflow_call:
+    inputs:
+      sdk:
+        required: true
+        type: string
+      tag-prefix:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - if: inputs.sdk == 'rust' || inputs.sdk == 'c-abi'
+        uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: 1.96.0
+      - if: inputs.sdk == 'rust' || inputs.sdk == 'c-abi'
+        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - if: inputs.sdk == 'web'
+        uses: actions/setup-node@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sdk/web/package-lock.json
+      - if: inputs.sdk == 'android'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - if: inputs.sdk == 'android'
+        uses: gradle/actions/setup-gradle@4733eaac7c1b0da527e4206b7671e0061de1ce37 # v6
+        with:
+          gradle-version: "9.4.1"
+      - name: Build isolated SDK candidate
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".Substring("${{ inputs.tag-prefix }}".Length)
+          ./scripts/build-sdk.ps1 -Sdk "${{ inputs.sdk }}" -Version $version
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: fluvora-${{ inputs.sdk }}-${{ github.ref_name }}
+          path: |
+            artifacts/sdk-releases/${{ inputs.sdk }}/*.zip
+            artifacts/sdk-releases/${{ inputs.sdk }}/*.sha256
+          if-no-files-found: error

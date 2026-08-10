@@ -88,10 +88,15 @@ Build a versioned candidate package from a clean commit:
 ./scripts/build-release.ps1 -CiRunUrl "https://github.com/<owner>/<repo>/actions/runs/<id>"
 ```
 
-The script checks that Cargo, Web, and Android versions agree, runs the quick release gates, and
-writes service binaries, five SDK artifacts/demos, bilingual documentation, a source snapshot,
+The script validates the platform version, runs the quick release gates, and writes service
+binaries, five SDK artifacts/demos with their own versions, bilingual documentation, a source snapshot,
 build evidence, and SHA-256 checksums under `artifacts/releases/`. It does not create a Git tag or
 GitHub Release and does not publish to npm, Maven, or another public registry.
+
+SDKs also have independent versions and candidate builds. For example, the command
+`./scripts/build-sdk.ps1 -Sdk web` builds only the Web SDK; pushing `web-vX.Y.Z` runs its workflow without
+building the server. Each SDK owns `sdk/<name>/CHANGELOG.md`; the root changelog is reserved for
+server/platform releases. See the [SDK release design](docs/en/SDK_RELEASES.md).
 
 Runnable examples for all five SDK targets are indexed in
 [`examples/README.md`](examples/README.md). They cover room creation and joining, SFU, P2P

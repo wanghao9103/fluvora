@@ -19,8 +19,9 @@
 1. [SDK 接入指南](SDK_INTEGRATION.md)：五端安装、鉴权、媒体、错误、释放和排障；
 2. [公开 API](API.md)：HTTP、WebSocket、WHIP/WHEP 和媒体控制接口；
 3. [SDK 示例](SDK_DEMOS.md)：各平台可运行示例与能力覆盖；
-4. `sdk-contract-v1.json`：跨端操作和安全边界的机器可检验契约；
-5. `sdk-demo-contract-v1.json`：示例覆盖的机器可检验契约。
+4. [SDK 独立版本与发布](SDK_RELEASES.md)：版本来源、Changelog 边界、标签和候选包；
+5. `sdk-contract-v1.json`：跨端操作和安全边界的机器可检验契约；
+6. `sdk-demo-contract-v1.json`：示例覆盖的机器可检验契约。
 
 ### 部署与上线
 
@@ -39,6 +40,7 @@
 | `API.md` | 客户端可调用哪些公开接口 | 路由、字段、状态码、限制变化 |
 | `SDK_INTEGRATION.md` | 五端如何安装、连接媒体、处理错误和释放 | SDK 构造器、公开方法、平台边界变化 |
 | `SDK_DEMOS.md` | 各 SDK 如何使用能力 | SDK 公开方法或示例变化 |
+| `SDK_RELEASES.md` | SDK 如何独立升版、构建和维护变更记录 | SDK 版本、标签或发布流程变化 |
 | `PRODUCTION_ACCEPTANCE.md` | 上线必须通过哪些检查 | 发布门禁、容量和安全要求变化 |
 | `RUNBOOK.md` | 线上异常如何发现和处理 | 配置、指标、告警和恢复方式变化 |
 | `DEVELOPMENT_PLAN.md` | 项目如何分阶段交付 | 里程碑、人员和范围变化 |

@@ -49,29 +49,39 @@ function Get-ReleaseContext(
         throw "cargo metadata failed with code $LASTEXITCODE"
     }
     $metadata = $metadataJson | ConvertFrom-Json
-    $workspaceVersions = @($metadata.packages.version | Sort-Object -Unique)
-    if ($workspaceVersions.Count -ne 1) {
-        throw "workspace package versions are not aligned: $($workspaceVersions -join ', ')"
+    $serverPackage = @($metadata.packages | Where-Object name -eq "fluvora-api-server")
+    if ($serverPackage.Count -ne 1) {
+        throw "expected exactly one fluvora-api-server package"
     }
-    $workspaceVersion = [string] $workspaceVersions[0]
-    $resolvedVersion = if ($RequestedVersion) { $RequestedVersion } else { $workspaceVersion }
-    if ($resolvedVersion -ne $workspaceVersion) {
-        throw "requested version $resolvedVersion does not match Cargo workspace $workspaceVersion"
+    $serverVersion = [string] $serverPackage[0].version
+    $resolvedVersion = if ($RequestedVersion) { $RequestedVersion } else { $serverVersion }
+    if ($resolvedVersion -ne $serverVersion) {
+        throw "requested version $resolvedVersion does not match server version $serverVersion"
     }
 
     $webPackage = Get-Content -LiteralPath (
         Join-Path $ProjectRoot "sdk\web\package.json"
     ) -Raw | ConvertFrom-Json
-    if ($webPackage.version -ne $resolvedVersion) {
-        throw "Web SDK version $($webPackage.version) does not match $resolvedVersion"
+    $rustPackage = @($metadata.packages | Where-Object name -eq "fluvora-sdk")
+    $cAbiPackage = @($metadata.packages | Where-Object name -eq "fluvora-c-abi")
+    if ($rustPackage.Count -ne 1 -or $cAbiPackage.Count -ne 1) {
+        throw "expected exactly one Rust SDK and one C ABI package"
     }
     $androidBuild = Get-Content -LiteralPath (
         Join-Path $ProjectRoot "sdk\android\build.gradle.kts"
     ) -Raw
-    if ($androidBuild -notmatch (
-        'version\s*=\s*"' + [regex]::Escape($resolvedVersion) + '"'
-    )) {
-        throw "Android SDK version does not match $resolvedVersion"
+    if ($androidBuild -notmatch 'version\s*=\s*"([^"]+)"') {
+        throw "could not resolve Android SDK version"
+    }
+    $swiftVersion = (Get-Content -LiteralPath (
+        Join-Path $ProjectRoot "sdk\ios\VERSION"
+    ) -Raw).Trim()
+    $sdkVersions = [ordered]@{
+        web = [string] $webPackage.version
+        rust = [string] $rustPackage[0].version
+        cAbi = [string] $cAbiPackage[0].version
+        android = [string] $Matches[1]
+        swift = $swiftVersion
     }
 
     $gitCommit = (& git rev-parse HEAD).Trim()
@@ -111,6 +121,7 @@ function Get-ReleaseContext(
     [pscustomobject]@{
         ProjectRoot = $ProjectRoot
         Version = $resolvedVersion
+        SdkVersions = $sdkVersions
         GitCommit = $gitCommit
         Platform = $platform
         Architecture = $architecture

@@ -9,6 +9,7 @@ $coreDocuments = @(
     "docs/API.md",
     "docs/SDK_INTEGRATION.md",
     "docs/SDK_DEMOS.md",
+    "docs/SDK_RELEASES.md",
     "docs/PRODUCTION_ACCEPTANCE.md",
     "docs/RUNBOOK.md",
     "docs/DEVELOPMENT_PLAN.md"
@@ -23,6 +24,7 @@ $englishDocuments = @(
     "docs/en/API.md",
     "docs/en/SDK_INTEGRATION.md",
     "docs/en/SDK_DEMOS.md",
+    "docs/en/SDK_RELEASES.md",
     "docs/en/PRODUCTION_ACCEPTANCE.md",
     "docs/en/RUNBOOK.md",
     "docs/en/DEVELOPMENT_PLAN.md"
@@ -54,6 +56,7 @@ $documentationNames = @(
     "API.md",
     "SDK_INTEGRATION.md",
     "SDK_DEMOS.md",
+    "SDK_RELEASES.md",
     "PRODUCTION_ACCEPTANCE.md",
     "RUNBOOK.md",
     "DEVELOPMENT_PLAN.md"

@@ -154,3 +154,14 @@ CI 与容器镜像始终编译生产 DTLS 特性。
 [docs/SDK_INTEGRATION.md](docs/SDK_INTEGRATION.md)，发布门禁见
 [docs/PRODUCTION_ACCEPTANCE.md](docs/PRODUCTION_ACCEPTANCE.md)，运维处置见
 [docs/RUNBOOK.md](docs/RUNBOOK.md)。
+
+## SDK 独立版本与发布
+
+源码保持在同一仓库，便于协议、服务端和 SDK 的关联修改原子评审；版本和交付则按 SDK
+拆分。运行 `./scripts/build-sdk.ps1 -Sdk web` 只构建 Web SDK，推送 `web-vX.Y.Z` 也只触发
+Web SDK 候选包，不构建服务端或容器。Rust、C ABI、Android、Swift 分别使用 `rust-v*`、
+`c-abi-v*`、`android-v*`、`swift-v*`。
+
+根目录 `CHANGELOG.md` 只记录服务端/平台，各 SDK 在自己的 `sdk/<name>/CHANGELOG.md`
+记录修复、迁移和服务端兼容范围，避免 SDK 小修复淹没平台记录。完整约定见
+[SDK 独立版本与发布设计](docs/SDK_RELEASES.md)。

@@ -1,0 +1,30 @@
+name: SDK Release Candidate
+
+on:
+  push:
+    tags: ["web-v*", "rust-v*", "c-abi-v*", "android-v*", "swift-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    if: startsWith(github.ref_name, 'web-v')
+    uses: ./.github/workflows/sdk-build.yml
+    with: { sdk: web, tag-prefix: web-v, runner: ubuntu-24.04 }
+  rust:
+    if: startsWith(github.ref_name, 'rust-v')
+    uses: ./.github/workflows/sdk-build.yml
+    with: { sdk: rust, tag-prefix: rust-v, runner: ubuntu-24.04 }
+  c-abi:
+    if: startsWith(github.ref_name, 'c-abi-v')
+    uses: ./.github/workflows/sdk-build.yml
+    with: { sdk: c-abi, tag-prefix: c-abi-v, runner: ubuntu-24.04 }
+  android:
+    if: startsWith(github.ref_name, 'android-v')
+    uses: ./.github/workflows/sdk-build.yml
+    with: { sdk: android, tag-prefix: android-v, runner: ubuntu-24.04 }
+  swift:
+    if: startsWith(github.ref_name, 'swift-v')
+    uses: ./.github/workflows/sdk-build.yml
+    with: { sdk: swift, tag-prefix: swift-v, runner: macos-15 }
