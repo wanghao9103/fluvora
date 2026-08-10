@@ -2,7 +2,7 @@ function Invoke-ReleaseCommand([string] $FilePath, [string[]] $Arguments) {
     $savedErrorAction = $ErrorActionPreference
     try {
         $ErrorActionPreference = "Continue"
-        & $FilePath @Arguments
+        & $FilePath @Arguments | Out-Host
         $exitCode = $LASTEXITCODE
     }
     finally {

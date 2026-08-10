@@ -18,7 +18,7 @@ function Build-CoreComponents(
         $savedCargoTargetDirectory = $env:CARGO_TARGET_DIR
         try {
             & (Join-Path $Context.ProjectRoot "scripts\check-openssl-vendored.ps1") `
-                -TargetDirectory $vendoredTargetDirectory -BuildRelease
+                -TargetDirectory $vendoredTargetDirectory -BuildRelease | Out-Host
             $mediaNodeSource = Join-Path $vendoredTargetDirectory (
                 "release\fluvora-media-node.exe"
             )
