@@ -13,7 +13,7 @@ openssl-vendored = ["openssl-backend", "openssl/vendored"]
 [dependencies]
 fluvora-srtp = { path = "../srtp" }
 openssl = { version = "0.10", optional = true }
-sha2 = "0.10"
+sha2 = "0.11"
 
 [lints]
 workspace = true

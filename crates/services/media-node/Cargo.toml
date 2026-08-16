@@ -29,7 +29,7 @@ fluvora-stun = { path = "../../webrtc/stun" }
 fluvora-status-client = { path = "../../control-plane/status-client" }
 fluvora-status-service = { path = "../../control-plane/status-service" }
 serde = { version = "1", features = ["derive"] }
-getrandom = "0.3"
+getrandom = "0.4"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
 
 [lints]
