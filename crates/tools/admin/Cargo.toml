@@ -7,7 +7,7 @@ publish.workspace = true
 
 [dependencies]
 fluvora-auth = { path = "../../control-plane/auth" }
-getrandom = "0.3"
+getrandom = "0.4"
 
 [lints]
 workspace = true

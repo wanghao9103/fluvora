@@ -7,7 +7,7 @@ publish.workspace = true
 
 [dependencies]
 anyhow = "1"
-async-nats = "0.50"
+async-nats = "0.51"
 axum = "0.8"
 fluvora-control-store = { path = "../control-store" }
 fluvora-status-client = { path = "../status-client" }
