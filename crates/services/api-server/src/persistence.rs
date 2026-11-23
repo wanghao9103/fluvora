@@ -534,13 +534,13 @@ mod tests {
     use std::collections::{HashSet, VecDeque};
 
     use fluvora_domain::{
-        CommandId, CustomData, MemberRole, Room, RoomCommand, RoomEventKind, RoomId, RoomMode,
-        RoomPolicy, UserId,
+        CommandId, CustomData, MemberRole, Room, RoomCommand, RoomEvent, RoomEventKind, RoomId,
+        RoomMode, RoomPolicy, UserId,
     };
     use tempfile::tempdir;
 
     use super::{
-        ManagedRoom, PersistedRoom, SIDE_EFFECT_HISTORY_LIMIT, load_rooms,
+        ManagedRoom, PersistedRoom, SIDE_EFFECT_HISTORY_LIMIT, event_write, load_rooms,
         loaded_rooms_from_persisted, managed_from_persisted, persist_managed_room, persisted_room,
         snapshot_file_name,
     };
@@ -564,6 +564,26 @@ mod tests {
             side_effect_commands: HashSet::new(),
             side_effect_order: VecDeque::new(),
         }
+    }
+
+    #[test]
+    fn postgres_chat_event_preserves_the_full_message_id() {
+        let event = RoomEvent {
+            sequence: 2,
+            command_id: CommandId(2),
+            timestamp_millis: 101,
+            kind: RoomEventKind::ChatSent {
+                user: UserId(10),
+                message_id: u128::MAX,
+                text: "hello".to_owned(),
+            },
+        };
+        let write = event_write(&event).expect("represent the event as PostgreSQL JSONB");
+        assert_eq!(write.event_type, "room.chat_sent");
+        assert_eq!(
+            write.event["kind"]["message_id"].to_string(),
+            u128::MAX.to_string()
+        );
     }
 
     #[test]
