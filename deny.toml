@@ -8,7 +8,12 @@ targets = [
 ]
 
 [advisories]
-ignore = []
+ignore = [
+    # object_store still requires both unmaintained crates. Remove these entries
+    # once a released object_store replaces them.
+    { id = "RUSTSEC-2026-0542", reason = "Informational humantime notice; replacement tracked in apache/arrow-rs-object-store#908" },
+    { id = "RUSTSEC-2026-0543", reason = "Informational chrono notice; replacement tracked in apache/arrow-rs-object-store#909" },
+]
 
 [licenses]
 confidence-threshold = 0.93

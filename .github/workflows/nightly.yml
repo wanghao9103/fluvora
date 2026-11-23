@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      # Override the repository's stable rust-toolchain.toml for cargo-fuzz and its subprocesses.
+      # Override the repository's Rust pin for cargo-fuzz and its subprocesses.
       RUSTUP_TOOLCHAIN: nightly-2026-07-27
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
